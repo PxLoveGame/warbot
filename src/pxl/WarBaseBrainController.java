@@ -26,7 +26,7 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
     public String action() {
 
         if (!_alreadyCreated) {
-            setNextAgentToCreate(WarAgentType.WarEngineer);
+            setNextAgentToCreate(WarAgentType.WarLight);
             _alreadyCreated = true;
             return WarBase.ACTION_CREATE;
         }
@@ -34,14 +34,14 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
         if (getNbElementsInBag() >= 0 && getHealth() <= 0.8 * getMaxHealth())
             return WarBase.ACTION_EAT;
 
-        if (getMaxHealth() == getHealth()) {
-            _alreadyCreated = true;
+        if (getHealth() > getMaxHealth() * 0.8) {
+            _alreadyCreated = false;
         }
 
         List<WarMessage> messages = getMessages();
 
         for (WarMessage message : messages) {
-            if (message.getMessage().equals("Where is the base"))
+            if (message.getMessage().equals("Where is the base ?"))
                 reply(message, "I'm here");
         }
 
