@@ -1,0 +1,15 @@
+Name: PxL
+IconPath: MyTeam.png
+SoundPath: MyTeam.wav
+Description: |
+    blablabla
+BrainsPackage: pxl
+AgentsBrainClasses:
+    WarBase: WarBaseBrainController
+    WarExplorer: WarExplorerBrainController
+    WarLight: WarLightBrainController
+    WarHeavy: WarHeavyBrainController
+    WarRocketLauncher: WarRocketLauncherBrainController
+    WarKamikaze: WarKamikazeBrainController
+    WarEngineer: WarEngineerBrainController
+    WarTurret: WarTurretBrainController
