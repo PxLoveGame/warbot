@@ -1,6 +1,6 @@
 Name: PxL
-IconPath: MyTeam.png
-SoundPath: MyTeam.wav
+IconPath: team.png
+SoundPath: team.wav
 Description: |
     blablabla
 BrainsPackage: pxl

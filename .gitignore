@@ -1,0 +1,5 @@
+!bin/config.yml
+!bin/team.png
+bin/
+.project
+.settings/
