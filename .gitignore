@@ -1,5 +1,6 @@
-!bin/config.yml
-!bin/team.png
 bin/
 .project
 .settings/
+
+!bin/config.yml
+!bin/team.png
