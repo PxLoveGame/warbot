@@ -11,7 +11,14 @@ import java.util.List;
 
 public abstract class WarBaseBrainController extends WarBaseBrain {
 
-    public String ctask;
+    private String ctask = "nothingToDo";
+    private static final int MAX_LIGHT = 10;
+    private static final int MAX_HEAVY = 10;
+    private static final int MAX_EXPLORER = 5;
+    private static final int MAX_ENGINEER = 2;
+    private static final int MAX_ROCKETLAUNCHER = 2;
+    private static final int MAX_KAMIKAZE = 0;
+
 
     public WarBaseBrainController() {
         super();
@@ -19,7 +26,7 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 
     public void respondToMessages() {
         List<WarMessage> messages = getMessages();
-
+        // broadcastMessageToAll("I'm here");
         for (WarMessage message : messages) {
             if (message.getMessage().equals("Where is the base ?"))
                 reply(message, "I'm here");
@@ -42,14 +49,27 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
         }
     }
 
-    public String createWarLight() {
-        setNextAgentToCreate(WarAgentType.WarLight);
+
+    public String createUnits(){
+        int[] nbUnits = calculateUnits();
+        if(nbUnits[1] < MAX_HEAVY) setNextAgentToCreate(WarAgentType.WarHeavy);
+        if(nbUnits[0] < MAX_LIGHT) setNextAgentToCreate(WarAgentType.WarLight);
+        if(nbUnits[2] < MAX_EXPLORER) setNextAgentToCreate(WarAgentType.WarExplorer);
         return create();
     }
 
-    public String createExplorer() {
-        setNextAgentToCreate(WarAgentType.WarExplorer);
-        return create();
+    public int[] calculateUnits(){
+        int[] nbUnits = new int[6];
+        List<WarMessage> messages = getMessages();
+        for (WarMessage message : messages) {
+            if(message.getSenderType() == WarAgentType.WarLight) nbUnits[0]++;
+            else if(message.getSenderType() == WarAgentType.WarHeavy) nbUnits[1]++;
+            else if(message.getSenderType() == WarAgentType.WarExplorer) nbUnits[2]++;
+            else if(message.getSenderType() == WarAgentType.WarEngineer) nbUnits[3]++;
+            else if(message.getSenderType() == WarAgentType.WarRocketLauncher) nbUnits[4]++;
+            else if(message.getSenderType() == WarAgentType.WarKamikaze) nbUnits[5]++;
+        }
+        return nbUnits;
     }
 
     public String regenerate() {
@@ -62,13 +82,12 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 
     public void decide() {
         if (getHealth() > getMaxHealth() * 0.8) {
-            ctask = "createWarLight";
+            ctask = "createUnits";
         } else if (getNbElementsInBag() >= 0) {
             ctask = "regenerate";
         } else {
-            ctask = "nothing";
+            ctask = "nothingToDo";
         }
-        ctask = "idle"; // TOREMOVE
     }
 
     @Override
@@ -79,8 +98,8 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 		Method method;
 		String action = idle(); // default Action else java not happy
 		try {
-			method = c.getMethod(ctask, null);
-			action = (String) method.invoke(this, null);
+			method = c.getMethod(ctask);
+			action = (String) method.invoke(this);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

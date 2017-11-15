@@ -15,51 +15,62 @@ import edu.warbot.communications.WarMessage;
 
 public abstract class WarExplorerBrainController extends WarExplorerBrain {
 
-	private boolean shouldEmptyBag = false;
 	private String ctask = "findFood";
-	private WarAgentPercept base;
+	private int food_timer = 600;
 
     public WarExplorerBrainController() {
         super();
 	}
 
+	public void sendMessage() {
+        broadcastMessageToAgentType(WarAgentType.WarBase, "Ready to break some ass", "");
+	}
+
 	public String findFood() {
-		// setDebugString("findFood, sac : " + getNbElementsInBag());
+		if (isBagFull() || (!isBagEmpty() && food_timer <= 0)) {
+			ctask = "returnToBase";
+			return idle();
+		}
+		setDebugString("findFood, sac : " + getNbElementsInBag() + " Timer : "+ food_timer);
 		List<WarAgentPercept> percepts_ressource = getPercepts();
 
 		if(percepts_ressource == null || percepts_ressource.size() == 0){
-			setRandomHeading(20);
+			WarMessage food = getFood();
+			if(food != null) setHeading(food.getAngle());
+			else setRandomHeading(20);
 		} else {
 			for(WarAgentPercept ressource : percepts_ressource){
 				if(ressource.getType().equals(WarAgentType.WarFood)){
-					// setDebugString("Nourriture à proximité");
+					setDebugString("Nourriture à proximité");
 					broadcastMessageToAgentType(WarAgentType.WarExplorer, "food around here", "");
 					setHeading(ressource.getAngle());
 					if(ressource.getDistance() < WarFood.MAX_DISTANCE_TAKE){
+						food_timer = 600;
 						return take();
-					}
+					} 
 					break;
 				}
 			}
 		}
+		if(food_timer > 0) food_timer--;	
 		return move();
 	}
 
 	public String returnToBase() {
+		if (isBagEmpty()) {
+			ctask = "findFood";
+			return idle();
+		}
 		setDebugString("returnToBase, sac : " + getNbElementsInBag());
 		List<WarAgentPercept> percepts = getPerceptsAlliesByType(WarAgentType.WarBase);
 
 		if(percepts == null || percepts.size() == 0){
-			List<WarMessage> messages = getMessages();
-			for(WarMessage message : messages){
-				if(message.getSenderType() == WarAgentType.WarBase){
-					setHeading(message.getAngle());
-				}
-				broadcastMessageToAgentType(WarAgentType.WarBase, "Where is the base ?", "");
+			WarMessage base = getBase();
+			if (base != null) {
+				setHeading(base.getAngle());
 			}
 		} else {
 			WarAgentPercept base = percepts.get(0);
-
 			if(base.getDistance() > MAX_DISTANCE_GIVE){
 				setHeading(base.getAngle());
 			} else {
@@ -68,32 +79,47 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 			}
 		}
 		return move();
+
+	}
+	private WarMessage getFood(){
+		List<WarMessage> messages = getMessages();
+		for(WarMessage message : messages){
+			if(message.getMessage().equals("food around here")) return message;
+		}
+		return null;
 	}
 
-	public void decide() {
-		if (isBagEmpty() && ctask.equals("returnToBase")) {
-			ctask = "findFood";
-		} else if (isBagFull()) {
-		    ctask = "returnToBase";
+	private WarMessage getBase() {
+		broadcastMessageToAgentType(WarAgentType.WarBase, "Where is the base ?", "");
+		List<WarMessage> messages = getMessages();
+		for(WarMessage message : messages) {
+			if(message.getSenderType() == WarAgentType.WarBase){
+				return message;
+			}
 		}
-		ctask = "returnToBase"; // TOREMOVE
+		return null;
+	}
+
+	private void reflexes() {
+		sendMessage();
 	}
 
     @Override
     public String action() {
-		decide();
+		reflexes();
 		Class c = this.getClass();
 		Method method;
-		
-		if (isBlocked()) setRandomHeading();
-		
+
 		String action = move(); // default Action
 		try {
-			method = c.getMethod(ctask, null);
-			action = (String) method.invoke(this, null);
+			method = c.getMethod(ctask);
+			action = (String) method.invoke(this);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
+		if (isBlocked()) setRandomHeading();
+
 		return action;
     }
 
