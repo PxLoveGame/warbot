@@ -6,6 +6,7 @@ import edu.warbot.agents.enums.WarAgentType;
 import edu.warbot.agents.percepts.WarAgentPercept;
 import edu.warbot.brains.brains.WarBaseBrain;
 import edu.warbot.communications.WarMessage;
+import edu.warbot.tools.geometry.PolarCoordinates;
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -18,6 +19,7 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
     private static final int MAX_ENGINEER = 2;
     private static final int MAX_ROCKETLAUNCHER = 2;
     private static final int MAX_KAMIKAZE = 0;
+    private PolarCoordinates foodLocation;
 
 
     public WarBaseBrainController() {
@@ -26,26 +28,29 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 
     public void respondToMessages() {
         List<WarMessage> messages = getMessages();
-        // broadcastMessageToAll("I'm here");
         for (WarMessage message : messages) {
             if (message.getMessage().equals("Where is the base ?"))
                 reply(message, "I'm here");
+            if (message.getMessage().equals("food around here")) {
+                foodLocation = new PolarCoordinates(message.getDistance(), message.getAngle());
+            }
         }
     }
 
     public void sendMessage() {
         for (WarAgentPercept percept : getPerceptsEnemies()) {
-            if (isEnemy(percept) && percept.getType().getCategory().equals(WarAgentCategory.Soldier))
+            if (isEnemy(percept) && percept.getType().getCategory().equals(WarAgentCategory.Soldier)) {
                 broadcastMessageToAll("I'm under attack",
                         String.valueOf(percept.getAngle()),
                         String.valueOf(percept.getDistance()));
+            }
         }
-
-        for (WarAgentPercept percept : getPerceptsResources()) {
-            if (percept.getType().equals(WarAgentType.WarFood))
-                broadcastMessageToAgentType(WarAgentType.WarExplorer, "I detected food",
-                        String.valueOf(percept.getAngle()),
-                        String.valueOf(percept.getDistance()));
+        if (foodLocation != null) {
+            setDebugString("I have food Position : " + foodLocation.getDistance());
+            broadcastMessageToAgentType(WarAgentType.WarExplorer,
+                                        "food location",
+                                        String.valueOf(foodLocation.getDistance()),
+                                        String.valueOf(foodLocation.getAngle()));
         }
     }
 
@@ -82,7 +87,7 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 
     public void decide() {
         if (getHealth() > getMaxHealth() * 0.8) {
-            ctask = "createUnits";
+            // ctask = "createUnits";
         } else if (getNbElementsInBag() >= 0) {
             ctask = "regenerate";
         } else {
@@ -90,9 +95,15 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
         }
     }
 
+    public void reflexes() {
+        setDebugString("nourriture : " + getNbElementsInBag());
+        respondToMessages();
+        sendMessage();
+    }
+
     @Override
     public String action() {
-        respondToMessages();
+        reflexes();
 		decide();
 		Class c = this.getClass();
 		Method method;
