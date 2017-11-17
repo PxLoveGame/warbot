@@ -4,6 +4,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Collections;
+import java.util.Comparator;
 
 import edu.warbot.tools.geometry.PolarCoordinates;
 import edu.warbot.agents.agents.WarExplorer;
@@ -16,8 +18,11 @@ import edu.warbot.communications.WarMessage;
 
 public abstract class WarExplorerBrainController extends WarExplorerBrain {
 
+	private static final int MAX_TIMER = 600;
+	private static final int MAX_DISTANCE_FROM_FOOD = 250;
+
 	private String ctask = "findFood";
-	private int food_timer = 600;
+	private int food_timer = MAX_TIMER;
 
     public WarExplorerBrainController() {
         super();
@@ -28,42 +33,45 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 	}
 
 	public String findFood() {
+		if(food_timer > 0) {
+			food_timer--; 
+		}
 		if (isBagFull() || (!isBagEmpty() && food_timer <= 0)) {
 			ctask = "returnToBase";
 			return idle();
 		}
 		setDebugString("findFood, sac : " + getNbElementsInBag() + " Timer : "+ food_timer);
 		List<WarAgentPercept> percepts_ressource = getPercepts();
+		boolean noFoodAround = percepts_ressource == null || percepts_ressource.size() == 0;
 
-		if(percepts_ressource == null || percepts_ressource.size() == 0){
-			WarMessage food = getFood();
+		if(noFoodAround) {
+			WarMessage food = getFoodFromOtherExplorer();
 			if(food != null) {
 				setHeading(food.getAngle());
 			} else {
-				PolarCoordinates foodLocation = getFoodLocation();
+				PolarCoordinates foodLocation = getFoodLocationFromBase();
 				if (foodLocation != null) {
-					if (foodLocation.getDistance() > 200) {
+					if (foodLocation.getDistance() > MAX_DISTANCE_FROM_FOOD) {
 						setHeading(foodLocation.getAngle());
 					}
-				} else {
-					setRandomHeading(5);
 				}
+				setRandomHeading(5);
 			}
 		} else {
-			for(WarAgentPercept ressource : percepts_ressource){
-				if(ressource.getType().equals(WarAgentType.WarFood)){
-					setDebugString("Nourriture à proximité");
-					broadcastMessageToAll("food around here");
-					setHeading(ressource.getAngle());
-					if(ressource.getDistance() < WarFood.MAX_DISTANCE_TAKE){
-						food_timer = 600;
-						return take();
-					} 
-					break;
-				}
+			percepts_ressource.removeIf(r -> !r.getType().equals(WarAgentType.WarFood));
+			if (percepts_ressource.size() > 0) {
+				Collections.sort(percepts_ressource, (w1, w2) -> Double.compare(w1.getDistance(),w2.getDistance()));
+				WarAgentPercept ressource = percepts_ressource.get(0);
+				setHeading(ressource.getAngle());
+				setDebugString("Nourriture à proximité");
+				broadcastMessageToAll("food around here");
+				setHeading(ressource.getAngle());
+				if(ressource.getDistance() < WarFood.MAX_DISTANCE_TAKE){
+					food_timer = MAX_TIMER;
+					return take();
+				} 
 			}
 		}
-		if(food_timer > 0) food_timer--;	
 		return move();
 	}
 
@@ -94,7 +102,7 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 
 	}
 
-	private PolarCoordinates getFoodLocation() {
+	private PolarCoordinates getFoodLocationFromBase() {
 		List<WarMessage> messages = getMessages();
 		for(WarMessage message : messages){
 			if(message.getMessage().equals("food location")) {
@@ -108,7 +116,7 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 		return null;
 	}
 
-	private WarMessage getFood(){
+	private WarMessage getFoodFromOtherExplorer(){
 		List<WarMessage> messages = getMessages();
 		for(WarMessage message : messages){
 			if(message.getMessage().equals("food around here")) return message;

@@ -7,10 +7,14 @@ import edu.warbot.agents.percepts.WarAgentPercept;
 import edu.warbot.brains.brains.WarBaseBrain;
 import edu.warbot.communications.WarMessage;
 import edu.warbot.tools.geometry.PolarCoordinates;
+
 import java.lang.reflect.Method;
 import java.util.List;
+import java.lang.Math;
 
 public abstract class WarBaseBrainController extends WarBaseBrain {
+
+    private static final int BEST_FOOD_DISTANCE = 480;
 
     private String ctask = "nothingToDo";
     private static final int MAX_LIGHT = 10;
@@ -32,7 +36,13 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
             if (message.getMessage().equals("Where is the base ?"))
                 reply(message, "I'm here");
             if (message.getMessage().equals("food around here")) {
-                foodLocation = new PolarCoordinates(message.getDistance(), message.getAngle());
+                boolean isNewLocationBetter = foodLocation != null && 
+                            Math.abs(message.getDistance() - BEST_FOOD_DISTANCE)
+                            < Math.abs(foodLocation.getDistance() - BEST_FOOD_DISTANCE);
+                if (foodLocation == null || isNewLocationBetter) {
+                    foodLocation = new PolarCoordinates(message.getDistance(), message.getAngle());
+                }
+                
             }
         }
     }
@@ -46,7 +56,6 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
             }
         }
         if (foodLocation != null) {
-            setDebugString("I have food Position : " + foodLocation.getDistance());
             broadcastMessageToAgentType(WarAgentType.WarExplorer,
                                         "food location",
                                         String.valueOf(foodLocation.getDistance()),
