@@ -18,23 +18,75 @@ import edu.warbot.communications.WarMessage;
 
 public abstract class WarExplorerBrainController extends WarExplorerBrain {
 
+	public static enum ExplorerGroup {
+		EXPLORER, HARVESTER;
+
+		public string defaultTask;
+
+		public static ExplorerGroup fromInteger(int x) {
+			switch(x) {
+			case 0:
+				return EXPLORER;
+			case 1:
+				return HARVESTER;
+			}
+			return null;
+		}
+
+		public String toString() {
+			return String.valueOf(this.ordinal());
+		}
+	}
 	private static final int MAX_TIMER = 600;
 	private static final int MAX_DISTANCE_FROM_FOOD = 250;
 
 	private String ctask = "findFood";
 	private int food_timer = MAX_TIMER;
+	private ExplorerGroup group = ExplorerGroup.EXPLORER;
 
-    public WarExplorerBrainController() {
-        super();
+	public WarExplorerBrainController() {
+		super();
 	}
 
 	public void sendMessage() {
-        broadcastMessageToAgentType(WarAgentType.WarBase, "Ready to break some ass", "");
+		broadcastMessageToAgentType(WarAgentType.WarBase, "Ready to break some ass");
+		broadcastMessageToAgentType(WarAgentType.WarBase,
+									"explorer group",
+									group.toString(),
+									String.valueOf(getNbElementsInBag()));
+		handleEnemyBase();
+	}
+
+	public void handleChangeGroup() {
+		List<WarMessage> messages = getMessages();
+		for (WarMessage message : messages) {
+			setDebugString(message.getMessage());
+			if (message.getMessage().equals("change group")) {
+				if (group == ExplorerGroup.EXPLORER) {
+					group = ExplorerGroup.HARVESTER;
+					ctask = "findFood";
+				} else if (group == ExplorerGroup.HARVESTER && getNbElementsInBag() == 0) {
+					group = ExplorerGroup.EXPLORER;
+					ctask = "explore";
+				}
+			}
+		}
+	}
+
+	public void handleEnemyBase() {
+		WarAgentPercept enemyBase = getEnemyBase();
+		if (enemyBase != null) {
+			broadcastMessageToAll("Enemy Base !!");
+			broadcastMessageToAgentType(WarAgentType.WarBase,
+										"enemy base",
+										String.valueOf(enemyBase.getDistance()),
+										String.valueOf(enemyBase.getAngle()));
+		}
 	}
 
 	public String findFood() {
 		if(food_timer > 0) {
-			food_timer--; 
+			food_timer--;
 		}
 		if (isBagFull() || (!isBagEmpty() && food_timer <= 0)) {
 			ctask = "returnToBase";
@@ -69,7 +121,7 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 				if(ressource.getDistance() < WarFood.MAX_DISTANCE_TAKE){
 					food_timer = MAX_TIMER;
 					return take();
-				} 
+				}
 			}
 		}
 		return move();
@@ -99,17 +151,22 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 			}
 		}
 		return move();
+	}
 
+	public String explore() {
+		setDebugString("explore");
+		setRandomHeading(5);
+		return move();
 	}
 
 	private PolarCoordinates getFoodLocationFromBase() {
 		List<WarMessage> messages = getMessages();
 		for(WarMessage message : messages){
 			if(message.getMessage().equals("food location")) {
-                String[] content = message.getContent();
-                double distance = Double.parseDouble(content[0]);
-                double angle = Double.parseDouble(content[1]);
-                PolarCoordinates foodLocation = getTargetedAgentPosition(message.getAngle(), message.getDistance(), angle, distance);
+				String[] content = message.getContent();
+				double distance = Double.parseDouble(content[0]);
+				double angle = Double.parseDouble(content[1]);
+				PolarCoordinates foodLocation = getTargetedAgentPosition(message.getAngle(), message.getDistance(), angle, distance);
 				return foodLocation;
 			}
 		}
@@ -135,12 +192,21 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 		return null;
 	}
 
+	private WarAgentPercept getEnemyBase() {
+		List<WarAgentPercept> percepts = getPerceptsEnemiesByType(WarAgentType.WarBase);
+		if (percepts != null && percepts.size() != 0) {
+			return percepts.get(0);
+		}
+		return null;
+	}
+
 	private void reflexes() {
+		handleChangeGroup();
 		sendMessage();
 	}
 
-    @Override
-    public String action() {
+	@Override
+	public String action() {
 		reflexes();
 		Class c = this.getClass();
 		Method method;
@@ -154,9 +220,10 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 		}
 
 		if (isBlocked()) setRandomHeading();
+		//setDebugString(group.toString());
 
 		return action;
-    }
+	}
 
 
 }
