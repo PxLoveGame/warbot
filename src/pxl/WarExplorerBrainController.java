@@ -21,8 +21,6 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 	public static enum ExplorerGroup {
 		EXPLORER, HARVESTER;
 
-		public string defaultTask;
-
 		public static ExplorerGroup fromInteger(int x) {
 			switch(x) {
 			case 0:
@@ -37,6 +35,7 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 			return String.valueOf(this.ordinal());
 		}
 	}
+
 	private static final int MAX_TIMER = 600;
 	private static final int MAX_DISTANCE_FROM_FOOD = 250;
 

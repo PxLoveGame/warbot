@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e 
 set -o pipefail
-javac -d ./bin -cp ../warbot-3.3.3.jar src/pxl/*.java
+/usr/lib/jvm/java-8-oracle/bin/javac -d ./bin -cp ../warbot-3.3.3.jar src/pxl/*.java
 cd bin
 jar -cf ../../teams/pxl.jar ./*
 cd ../..

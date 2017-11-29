@@ -11,12 +11,48 @@ import edu.warbot.communications.WarMessage;
 
 public abstract class WarLightBrainController extends WarLightBrain {
 
-    public String ctask = "patrol";
+    public static enum ArmyGroup {
+		FIGHTER, DEFENDER;
+
+		public static ArmyGroup fromInteger(int x) {
+			switch(x) {
+			case 0:
+				return FIGHTER;
+			case 1:
+				return DEFENDER;
+			}
+			return null;
+		}
+
+		public String toString() {
+			return String.valueOf(this.ordinal());
+		}
+    }
+    
+    private static final int MAX_DISTANCE_FROM_BASE = 250;
+    private String ctask = "patrol";
+    private ArmyGroup group = ArmyGroup.FIGHTER;
 
     public WarLightBrainController() {
         super();
     }
 
+    public void handleChangeGroup() {
+		List<WarMessage> messages = getMessages();
+		for (WarMessage message : messages) {
+			setDebugString(message.getMessage());
+			if (message.getMessage().equals("change group")) {
+				if (group == ArmyGroup.DEFENDER && ctask != "attaque") {
+					group = ArmyGroup.FIGHTER;
+					ctask = "explore";
+				} else if (group == ArmyGroup.FIGHTER && ctask != "attaque") {
+					group = ArmyGroup.DEFENDER;
+					ctask = "patrol";
+				}
+			}
+		}
+    }
+    
     // ToDo : Pas bouger toutes les unités / faire le même type de message pour les tours
     public void sendMessage() {
         broadcastMessageToAgentType(WarAgentType.WarBase, "Ready to break some ass", "");
@@ -28,18 +64,26 @@ public abstract class WarLightBrainController extends WarLightBrain {
         }
     }
 
+    // Fighter ctask, explore le coté enemies de la map
+    public String explore(){
+
+    }
+
+    // DEFENDER ctask,  patrouille autour de sa base. 
     public String patrol() {
         List<WarAgentPercept> wps = getPerceptsEnemies();
-        setDebugString("LIGHT : Je cherche la merde");
+        setDebugString("LIGHT : Je Defend la base");
         setRandomHeading(20);
 
         if (!wps.isEmpty()) {
             ctask = "attaque";
             return  idle();
         } else {
-            WarMessage enemyBase = getEnemyBase();
-            if (enemyBase != null) {
-                setHeading(enemyBase.getAngle());
+            WarMessage base = getBase();
+            if (base != null) {
+                if (base.getDistance() > MAX_DISTANCE_FROM_BASE) {
+                    setHeading(base.getAngle());
+                }
             }
         }
         return move();
@@ -77,6 +121,17 @@ public abstract class WarLightBrainController extends WarLightBrain {
 		List<WarMessage> messages = getMessages();
 		for(WarMessage message : messages){
 			if(message.getMessage().equals("Enemy Base !!")) return message;
+		}
+		return null;
+    }
+    
+    private WarMessage getBase() {
+		broadcastMessageToAgentType(WarAgentType.WarBase, "Where is the base ?", "");
+		List<WarMessage> messages = getMessages();
+		for(WarMessage message : messages) {
+			if(message.getSenderType() == WarAgentType.WarBase){
+				return message;
+			}
 		}
 		return null;
 	}

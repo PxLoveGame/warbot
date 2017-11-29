@@ -11,10 +11,48 @@ import edu.warbot.communications.WarMessage;
 
 public abstract class WarHeavyBrainController extends  WarHeavyBrain {
 
-    public String ctask = "patrol";
+
+
+    public static enum ArmyGroup {
+		FIGHTER, DEFENDER;
+
+		public static ArmyGroup fromInteger(int x) {
+			switch(x) {
+			case 0:
+				return FIGHTER;
+			case 1:
+				return DEFENDER;
+			}
+			return null;
+		}
+
+		public String toString() {
+			return String.valueOf(this.ordinal());
+		}
+    }
+    
+    private static final int MAX_DISTANCE_FROM_BASE = 250;
+    private String ctask = "patrol";
+    private ArmyGroup group = ArmyGroup.FIGHTER;
 
     public WarHeavyBrainController() {
         super();
+    }
+
+    public void handleChangeGroup() {
+		List<WarMessage> messages = getMessages();
+		for (WarMessage message : messages) {
+			setDebugString(message.getMessage());
+			if (message.getMessage().equals("change group")) {
+				if (group == ArmyGroup.DEFENDER && ctask != "attaque") {
+					group = ArmyGroup.FIGHTER;
+					ctask = "explore";
+				} else if (group == ArmyGroup.FIGHTER && ctask != "attaque") {
+					group = ArmyGroup.DEFENDER;
+					ctask = "patrol";
+				}
+			}
+		}
     }
 
     public void sendMessage() {
