@@ -8,6 +8,9 @@ import edu.warbot.brains.brains.WarBaseBrain;
 import edu.warbot.communications.WarMessage;
 import edu.warbot.tools.geometry.PolarCoordinates;
 import pxl.WarExplorerBrainController.ExplorerGroup;
+import pxl.WarLightBrainController.LightGroup;
+import pxl.WarHeavyBrainController.HeavyGroup;
+
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -30,6 +33,9 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 	private PolarCoordinates enemyBaseLocation;
 
 	private static final int MIN_HARVESTER = 5;
+	private static final int MIN_LIGHT_DEFENDER = 5;
+	private static final int MIN_HEAVY_DEFENDER = 5;
+	
 
 	public WarBaseBrainController() {
 		super();
@@ -49,6 +55,65 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 		}
 		updateFoodLocation();
 		updateHarvesterCount();
+		updateFighterHeavy();
+		updateFighterLight();
+	}
+
+	//Bien jouer à Ronan pour ces super méthodes ! clap!clap!clap! (j'ai fais l'amour à ta maman)
+	public void updateFighterLight(){
+		List<WarMessage> messages = getMessages();
+		ArrayList<WarMessage> fighters = new ArrayList<>();
+		ArrayList<WarMessage> defenders = new ArrayList<>();
+		for(WarMessage message : messages){
+			if(message.getSenderType() == WarAgentType.WarLight && message.getMessage().equals("Light group")) {
+				int index = Integer.parseInt(message.getContent()[0]);
+				LightGroup g = LightGroup.fromInteger(index);
+				if (g == LightGroup.FIGHTER) fighters.add(message);
+				if (g == LightGroup.DEFENDER) defenders.add(message);
+			}
+		}
+
+		if (defenders.size() < MIN_LIGHT_DEFENDER && fighters.size() > 0) {
+			int neededdefenders = MIN_LIGHT_DEFENDER - defenders.size();
+			int canConvert = fighters.size();
+			for (int i = 0; i < neededdefenders  && i < canConvert; i++) {
+				reply(fighters.get(i), "change group");
+			}
+		} else if (defenders.size() > MIN_LIGHT_DEFENDER) {
+			int canConvert = defenders.size() - MIN_LIGHT_DEFENDER;
+			for (int i = 0; i < canConvert; i++) {
+				reply(defenders.get(i), "change group");
+			}
+		}
+		setDebugString(fighters.size() + "|" + defenders.size());
+	}
+
+	public void updateFighterHeavy() {
+		List<WarMessage> messages = getMessages();
+		ArrayList<WarMessage> fighters = new ArrayList<>();
+		ArrayList<WarMessage> defenders = new ArrayList<>();
+		for(WarMessage message : messages){
+			if(message.getSenderType() == WarAgentType.WarHeavy && message.getMessage().equals("Heavy group")) {
+				int index = Integer.parseInt(message.getContent()[0]);
+				HeavyGroup g = HeavyGroup.fromInteger(index);
+				if (g == HeavyGroup.FIGHTER) fighters.add(message);
+				if (g == HeavyGroup.DEFENDER) defenders.add(message);
+			}
+		}
+
+		if (defenders.size() < MIN_LIGHT_DEFENDER && fighters.size() > 0) {
+			int neededdefenders = MIN_LIGHT_DEFENDER - defenders.size();
+			int canConvert = fighters.size();
+			for (int i = 0; i < neededdefenders  && i < canConvert; i++) {
+				reply(fighters.get(i), "change group");
+			}
+		} else if (defenders.size() > MIN_LIGHT_DEFENDER) {
+			int canConvert = defenders.size() - MIN_LIGHT_DEFENDER;
+			for (int i = 0; i < canConvert; i++) {
+				reply(defenders.get(i), "change group");
+			}
+		}
+		setDebugString(fighters.size() + "|" + defenders.size());
 	}
 
 	public void updateFoodLocation() {
@@ -87,7 +152,7 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 		} else if (explorers.size() > MIN_HARVESTER && harvesters.size() > 0) {
 			int canConvert = harvesters.size() - MIN_HARVESTER;
 			for (int i = 0; i < canConvert; i++) {
-				reply(explorers.get(i), "change group");
+				reply(harvesters.get(i), "change group");
 			}
 		}
 		setDebugString(harvesters.size() + "|" + explorers.size());
@@ -103,10 +168,9 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 			}
 		}
 		if (foodLocation != null) {
-			broadcastMessageToAgentType(WarAgentType.WarExplorer,
-										"food location",
-										String.valueOf(foodLocation.getDistance()),
-										String.valueOf(foodLocation.getAngle()));
+			broadcastMessageToAll("food location",
+								String.valueOf(foodLocation.getDistance()),
+								String.valueOf(foodLocation.getAngle()));
 		}
 	}
 

@@ -7,14 +7,16 @@ import edu.warbot.agents.enums.WarAgentType;
 import edu.warbot.agents.percepts.WarAgentPercept;
 import edu.warbot.brains.brains.WarLightBrain;
 import edu.warbot.communications.WarMessage;
+import edu.warbot.tools.geometry.PolarCoordinates;
+
 
 
 public abstract class WarLightBrainController extends WarLightBrain {
 
-    public static enum ArmyGroup {
+    public static enum LightGroup {
 		FIGHTER, DEFENDER;
 
-		public static ArmyGroup fromInteger(int x) {
+		public static LightGroup fromInteger(int x) {
 			switch(x) {
 			case 0:
 				return FIGHTER;
@@ -29,9 +31,11 @@ public abstract class WarLightBrainController extends WarLightBrain {
 		}
     }
     
-    private static final int MAX_DISTANCE_FROM_BASE = 250;
-    private String ctask = "patrol";
-    private ArmyGroup group = ArmyGroup.FIGHTER;
+    private static final int MAX_DISTANCE_FROM_BASE = 100;
+    private static final int MAX_DISTANCE_FROM_FOOD = 250;
+    
+    private String ctask = "defender";
+    private LightGroup group = LightGroup.DEFENDER;
 
     public WarLightBrainController() {
         super();
@@ -42,12 +46,12 @@ public abstract class WarLightBrainController extends WarLightBrain {
 		for (WarMessage message : messages) {
 			setDebugString(message.getMessage());
 			if (message.getMessage().equals("change group")) {
-				if (group == ArmyGroup.DEFENDER && ctask != "attaque") {
-					group = ArmyGroup.FIGHTER;
-					ctask = "explore";
-				} else if (group == ArmyGroup.FIGHTER && ctask != "attaque") {
-					group = ArmyGroup.DEFENDER;
-					ctask = "patrol";
+				if (group == LightGroup.DEFENDER) {
+					group = LightGroup.FIGHTER;
+					ctask = "fighter";
+				} else if (group == LightGroup.FIGHTER) {
+					group = LightGroup.DEFENDER;
+					ctask = "defender";
 				}
 			}
 		}
@@ -56,6 +60,7 @@ public abstract class WarLightBrainController extends WarLightBrain {
     // ToDo : Pas bouger toutes les unités / faire le même type de message pour les tours
     public void sendMessage() {
         broadcastMessageToAgentType(WarAgentType.WarBase, "Ready to break some ass", "");
+        broadcastMessageToAgentType(WarAgentType.WarBase,"Light group", group.toString());
         List<WarAgentPercept> wps = getPerceptsEnemies();
         for (WarAgentPercept wp : wps) {
             if (wp.getType().equals(WarAgentType.WarBase)) {
@@ -64,37 +69,35 @@ public abstract class WarLightBrainController extends WarLightBrain {
         }
     }
 
-    // Fighter ctask, explore le coté enemies de la map
-    public String explore(){
-
-    }
-
-    // DEFENDER ctask,  patrouille autour de sa base. 
-    public String patrol() {
-        List<WarAgentPercept> wps = getPerceptsEnemies();
-        setDebugString("LIGHT : Je Defend la base");
-        setRandomHeading(20);
-
-        if (!wps.isEmpty()) {
-            ctask = "attaque";
-            return  idle();
-        } else {
-            WarMessage base = getBase();
-            if (base != null) {
-                if (base.getDistance() > MAX_DISTANCE_FROM_BASE) {
-                    setHeading(base.getAngle());
-                }
+    // Fighter ctask, explore autour de la zone de nourriture.
+    public String fighter(){
+        setDebugString("LIGHT : J'attaque la base enemies");
+        PolarCoordinates foodLocation = getFoodLocationFromBase();
+        if (foodLocation != null) {
+            if (foodLocation.getDistance() > MAX_DISTANCE_FROM_FOOD) {
+                setHeading(foodLocation.getAngle());
             }
         }
+        setRandomHeading(5);
         return move();
     }
 
-    public String attaque() {
-        List<WarAgentPercept> wps = getPerceptsEnemies();
-        if(wps.isEmpty()){
-            ctask = "patrol";
-            return idle();
+    // DEFENDER ctask,  patrouille autour de sa base. 
+    public String defender() {
+        setDebugString("LIGHT : Je Defend la base");
+        setRandomHeading(5);
+
+        WarMessage base = getBase();
+        if (base != null) {
+            if (base.getDistance() > MAX_DISTANCE_FROM_BASE) {
+                setHeading(base.getAngle());
+            }
         }
+    return move();
+    }
+
+    public String shoot() {
+        List<WarAgentPercept> wps = getPerceptsEnemies();        
         for (WarAgentPercept wp : wps) {
             if (!wp.getType().equals(WarAgentType.WarHeavy) &&
                 !wp.getType().equals(WarAgentType.WarFood) &&
@@ -105,16 +108,12 @@ public abstract class WarLightBrainController extends WarLightBrain {
                 if (isReloaded())
                     return fire();
                 else if (isReloading())
-                    return idle();
+                    return null;
                 else
                     return beginReloadWeapon();
-            } else {
-                setDebugString("je fui !");
-                setHeading(wp.getAngle() + 180);
-                return move();
             }
         }
-        return move();
+        return null;
     }
 
     private WarMessage getEnemyBase(){
@@ -136,16 +135,34 @@ public abstract class WarLightBrainController extends WarLightBrain {
 		return null;
 	}
 
-    public void reflexes() {
+    private PolarCoordinates getFoodLocationFromBase() {
+		List<WarMessage> messages = getMessages();
+		for(WarMessage message : messages){
+			if(message.getMessage().equals("food location")) {
+				String[] content = message.getContent();
+				double distance = Double.parseDouble(content[0]);
+				double angle = Double.parseDouble(content[1]);
+				PolarCoordinates foodLocation = getTargetedAgentPosition(message.getAngle(), message.getDistance(), angle, distance);
+				return foodLocation;
+			}
+		}
+		return null;
+    }
+    
+    public String reflexes() {
+        handleChangeGroup();
         sendMessage();
+        return shoot();
     }
 
     public String action() {
-        reflexes();
+        String action = reflexes();
+        if (action != null) { return action; }
+
         Class c = this.getClass();
         Method method;
 
-        String action = move(); // default Action
+        action = move(); // default Action
         try {
             method = c.getMethod(ctask);
             action = (String) method.invoke(this);
