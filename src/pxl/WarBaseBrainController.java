@@ -17,7 +17,6 @@ import java.util.List;
 import java.lang.Math;
 import java.util.ArrayList;
 
-
 public abstract class WarBaseBrainController extends WarBaseBrain {
 
 	private static final int BEST_FOOD_DISTANCE = 480;
@@ -35,7 +34,7 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 	private static final int MIN_HARVESTER = 5;
 	private static final int MIN_LIGHT_DEFENDER = 5;
 	private static final int MIN_HEAVY_DEFENDER = 5;
-	
+
 
 	public WarBaseBrainController() {
 		super();
@@ -80,7 +79,7 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 				reply(fighters.get(i), "change group");
 			}
 		} else if (defenders.size() > MIN_LIGHT_DEFENDER) {
-			int canConvert = defenders.size() - MIN_LIGHT_DEFENDER;
+			int canConvert = defenders.size() - MIN_LIGHT_DEFENDER - 1;
 			for (int i = 0; i < canConvert; i++) {
 				reply(defenders.get(i), "change group");
 			}
@@ -108,26 +107,12 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 				reply(fighters.get(i), "change group");
 			}
 		} else if (defenders.size() > MIN_LIGHT_DEFENDER) {
-			int canConvert = defenders.size() - MIN_LIGHT_DEFENDER;
+			int canConvert = defenders.size() - MIN_LIGHT_DEFENDER - 1;
 			for (int i = 0; i < canConvert; i++) {
 				reply(defenders.get(i), "change group");
 			}
 		}
 		setDebugString(fighters.size() + "|" + defenders.size());
-	}
-
-	public void updateFoodLocation() {
-		List<WarMessage> messages = getMessages();
-		for (WarMessage message : messages) {
-			if (message.getMessage().equals("food around here")) {
-				boolean isNewLocationBetter = foodLocation != null &&
-							Math.abs(message.getDistance() - BEST_FOOD_DISTANCE)
-							< Math.abs(foodLocation.getDistance() - BEST_FOOD_DISTANCE);
-				if (foodLocation == null || isNewLocationBetter) {
-					foodLocation = new PolarCoordinates(message.getDistance(), message.getAngle());
-				}
-			}
-		}
 	}
 
 	private void updateHarvesterCount() {
@@ -150,13 +135,26 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 				reply(explorers.get(i), "change group");
 			}
 		} else if (explorers.size() > MIN_HARVESTER && harvesters.size() > 0) {
-			int canConvert = harvesters.size() - MIN_HARVESTER;
+			int canConvert = harvesters.size() - MIN_HARVESTER - 1;
 			for (int i = 0; i < canConvert; i++) {
 				reply(harvesters.get(i), "change group");
 			}
 		}
 		setDebugString(harvesters.size() + "|" + explorers.size());
+	}
 
+	public void updateFoodLocation() {
+		List<WarMessage> messages = getMessages();
+		for (WarMessage message : messages) {
+			if (message.getMessage().equals("food around here")) {
+				boolean isNewLocationBetter = foodLocation != null &&
+							Math.abs(message.getDistance() - BEST_FOOD_DISTANCE)
+							< Math.abs(foodLocation.getDistance() - BEST_FOOD_DISTANCE);
+				if (foodLocation == null || isNewLocationBetter) {
+					foodLocation = new PolarCoordinates(message.getDistance(), message.getAngle());
+				}
+			}
+		}
 	}
 
 	public void sendMessage() {
