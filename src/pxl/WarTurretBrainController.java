@@ -6,29 +6,36 @@ import edu.warbot.brains.brains.WarTurretBrain;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.math.*;
+import java.lang.reflect.Field;
 
 public abstract class WarTurretBrainController extends WarTurretBrain {
 
-    private int _sight;
+    private int direction;
 
     public WarTurretBrainController() {
         super();
 
-        _sight = 0;
+        direction = 0;
     }
 
     @Override
     public String action() {
 
-        _sight += 90;
-        if (_sight == 360) {
-            _sight = 0;
+        direction += 90;
+        if (direction == 360) {
+            direction = 0;
         }
-        setHeading(_sight);
+
+        setHeading(direction);
+        if (isReloaded()) {
+            return WarTurret.ACTION_FIRE;
+        }
 
         List <WarAgentPercept> percepts = getPercepts();
         for (WarAgentPercept p : percepts) {
             if (isEnemy(p)) {
+                getPerfectShot(p);
                 setHeading(p.getAngle());
                 if (isReloaded()) {
                     return WarTurret.ACTION_FIRE;
@@ -38,5 +45,23 @@ public abstract class WarTurretBrainController extends WarTurretBrain {
         }
 
         return WarTurret.ACTION_IDLE;
+    }
+
+    void getShotAngle(WarAgentPercept enemy) {
+        String type = enemy.getType().name();
+        try {
+            Class enemyClass = Class.forName("edu.warbot.agents.agents." + type);
+            Field SPEED = enemyClass.getDeclaredField("SPEED");
+            double enemySpeed = SPEED.get(enemy);
+            System.out.println(SPEED.get(enemy));
+            double enemyX = enemySpeed * Math.cos(Math.toRadians(enemy.getAngle()));
+            double enemyY = enemySpeed * Math.sin(Math.toRadians(enemy.getAngle()));
+
+            double speedRatio = enemySpeed/WarShell.SPEED;
+            double b = 180 - enemy.getHeading() - enemy.getAngle();
+            double C = enemy.getDistance();
+
+            double angle = 
+        } catch(Exception e) { System.out.println(e); }
     }
 }
