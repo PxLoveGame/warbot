@@ -30,10 +30,10 @@ public abstract class WarLightBrainController extends WarLightBrain {
 			return String.valueOf(this.ordinal());
 		}
     }
-    
+
     private static final int MAX_DISTANCE_FROM_BASE = 100;
     private static final int MAX_DISTANCE_FROM_FOOD = 250;
-    
+
     private String ctask = "defender";
     private LightGroup group = LightGroup.DEFENDER;
 
@@ -56,7 +56,7 @@ public abstract class WarLightBrainController extends WarLightBrain {
 			}
 		}
     }
-    
+
     // ToDo : Pas bouger toutes les unités / faire le même type de message pour les tours
     public void sendMessage() {
         broadcastMessageToAgentType(WarAgentType.WarBase, "Ready to break some ass", "");
@@ -82,7 +82,7 @@ public abstract class WarLightBrainController extends WarLightBrain {
         return move();
     }
 
-    // DEFENDER ctask,  patrouille autour de sa base. 
+    // DEFENDER ctask,  patrouille autour de sa base.
     public String defender() {
         setDebugString("LIGHT : Je Defend la base");
         setRandomHeading(5);
@@ -97,7 +97,7 @@ public abstract class WarLightBrainController extends WarLightBrain {
     }
 
     public String shoot() {
-        List<WarAgentPercept> wps = getPerceptsEnemies();        
+        List<WarAgentPercept> wps = getPerceptsEnemies();
         for (WarAgentPercept wp : wps) {
             if (!wp.getType().equals(WarAgentType.WarHeavy) &&
                 !wp.getType().equals(WarAgentType.WarFood) &&
@@ -123,7 +123,7 @@ public abstract class WarLightBrainController extends WarLightBrain {
 		}
 		return null;
     }
-    
+
     private WarMessage getBase() {
 		broadcastMessageToAgentType(WarAgentType.WarBase, "Where is the base ?", "");
 		List<WarMessage> messages = getMessages();
@@ -148,7 +148,7 @@ public abstract class WarLightBrainController extends WarLightBrain {
 		}
 		return null;
     }
-    
+
     public String reflexes() {
         handleChangeGroup();
         sendMessage();
