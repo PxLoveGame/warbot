@@ -30,7 +30,6 @@ public abstract class WarTurretBrainController extends WarTurretBrain {
         if (direction == 360) {
             direction = 0;
         }
-        setDebugString("no percepts");
         setHeading(direction);
 
         List <WarAgentPercept> percepts = getPercepts();
@@ -63,7 +62,6 @@ public abstract class WarTurretBrainController extends WarTurretBrain {
             Class enemyClass = Class.forName("edu.warbot.agents.agents." + type);
             Field SPEED = enemyClass.getDeclaredField("SPEED");
             double enemySpeed = (double) SPEED.get(enemy);
-            setDebugString(type + " Speed : " + enemySpeed);
             double initialEnemyX = enemy.getDistance() * Math.cos(Math.toRadians(enemy.getAngle()));
             double initialEnemyY = enemy.getDistance() * Math.sin(Math.toRadians(enemy.getAngle()));
             double enemySpeedX = enemySpeed * Math.cos(Math.toRadians(enemy.getHeading()));
@@ -71,8 +69,8 @@ public abstract class WarTurretBrainController extends WarTurretBrain {
 
             double distanceToEnemy = Math.sqrt(Math.pow(initialEnemyX, 2) + Math.pow(initialEnemyX, 2));
             double bulletTimeToEnemy = distanceToEnemy / WarShell.SPEED;
-            double angleToEnemy = Math.toDegrees(Math.atan2(initialEnemyX, initialEnemyY));
-            double angleError = 100; // dumb initial value
+            double angleToEnemy = Math.atan2(initialEnemyY, initialEnemyX);
+            double angleError = 1000; // dumb initial value
             for (int i = 0; i < 100 || angleError > predictionError; i++) {
                 double previousAngleToEnemy = angleToEnemy;
                 double enemyX = initialEnemyX + enemySpeedX * bulletTimeToEnemy;
@@ -80,14 +78,14 @@ public abstract class WarTurretBrainController extends WarTurretBrain {
 
                 distanceToEnemy = Math.sqrt(Math.pow(enemyX, 2) + Math.pow(enemyY, 2));
                 bulletTimeToEnemy = distanceToEnemy / WarShell.SPEED;
-                angleToEnemy = Math.toDegrees(Math.atan2(enemyX, enemyY));
+                angleToEnemy = Math.atan2(enemyY, enemyX);
 
                 angleError = Math.abs(angleToEnemy - previousAngleToEnemy);
             }
             if (bulletTimeToEnemy > WarShell.AUTONOMY) {
                 return 0;
             } else {
-                return angleToEnemy;
+                return Math.toDegrees(angleToEnemy);
             }
         } catch(ClassNotFoundException e) {
             return 0; // Agent is not killable
