@@ -9,7 +9,10 @@ import edu.warbot.agents.percepts.WarAgentPercept;
 
 class Utils {
 
-    public static double getShotAngle(WarAgentPercept enemy) {
+    public static final int MAX_DISTANCE_FROM_FOOD = 250;
+    public static final int MAX_DISTANCE_FROM_BASE = 100;
+
+    public static double getShotAngle(WarAgentPercept enemy, double bulletSpeed) {
         double predictionError = 1.0e-6;
         String type = enemy.getType().name();
         try {
@@ -22,7 +25,7 @@ class Utils {
             double enemySpeedY = enemySpeed * Math.sin(Math.toRadians(enemy.getHeading()));
 
             double distanceToEnemy = Math.sqrt(Math.pow(initialEnemyX, 2) + Math.pow(initialEnemyX, 2));
-            double bulletTimeToEnemy = distanceToEnemy / WarShell.SPEED;
+            double bulletTimeToEnemy = distanceToEnemy / bulletSpeed;
             double angleToEnemy = Math.atan2(initialEnemyY, initialEnemyX);
             double angleError = 1000; // dumb initial value
             for (int i = 0; i < 100 || angleError > predictionError; i++) {
@@ -31,7 +34,7 @@ class Utils {
                 double enemyY = initialEnemyY + enemySpeedY * bulletTimeToEnemy;
 
                 distanceToEnemy = Math.sqrt(Math.pow(enemyX, 2) + Math.pow(enemyY, 2));
-                bulletTimeToEnemy = distanceToEnemy / WarShell.SPEED;
+                bulletTimeToEnemy = distanceToEnemy / bulletSpeed;
                 angleToEnemy = Math.atan2(enemyY, enemyX);
 
                 angleError = Math.abs(angleToEnemy - previousAngleToEnemy);

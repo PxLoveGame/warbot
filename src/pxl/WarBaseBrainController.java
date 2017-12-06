@@ -176,6 +176,7 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 		int[] nbUnits = calculateUnits();
 		if(nbUnits[1] < MAX_HEAVY) setNextAgentToCreate(WarAgentType.WarHeavy);
 		if(nbUnits[0] < MAX_LIGHT) setNextAgentToCreate(WarAgentType.WarLight);
+		if(nbUnits[3] < MAX_ENGINEER) setNextAgentToCreate(WarAgentType.WarEngineer);
 		if(nbUnits[2] < MAX_EXPLORER) setNextAgentToCreate(WarAgentType.WarExplorer);
 		return create();
 	}
