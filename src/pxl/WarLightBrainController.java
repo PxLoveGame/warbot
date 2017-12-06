@@ -9,6 +9,8 @@ import edu.warbot.brains.brains.WarLightBrain;
 import edu.warbot.communications.WarMessage;
 import edu.warbot.tools.geometry.PolarCoordinates;
 
+import pxl.Utils;
+import java.util.Collections;
 
 
 public abstract class WarLightBrainController extends WarLightBrain {
@@ -97,21 +99,24 @@ public abstract class WarLightBrainController extends WarLightBrain {
     }
 
     public String shoot() {
-        List<WarAgentPercept> wps = getPerceptsEnemies();
-        for (WarAgentPercept wp : wps) {
-            if (!wp.getType().equals(WarAgentType.WarHeavy) &&
-                !wp.getType().equals(WarAgentType.WarFood) &&
-                !wp.getType().equals(WarAgentType.WarExplorer)) {
+        List <WarAgentPercept> percepts = getPercepts();
+        percepts.removeIf(p -> !isEnemy(p));
 
-                setHeading(wp.getAngle());
-                this.setDebugString("Attaque");
+        if (percepts.isEmpty()) {
+            return null;
+        }
+
+        Collections.sort(percepts, (w1, w2) -> Double.compare(w1.getDistance(),w2.getDistance()));
+        WarAgentPercept enemy = percepts.get(0);
+        double angle = Utils.getShotAngle(enemy);
+        if (angle != 0) {
+            setHeading(angle);
                 if (isReloaded())
                     return fire();
                 else if (isReloading())
                     return null;
                 else
                     return beginReloadWeapon();
-            }
         }
         return null;
     }

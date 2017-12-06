@@ -9,7 +9,8 @@ import edu.warbot.brains.brains.WarRocketLauncherBrain;
 import edu.warbot.communications.WarMessage;
 
 import edu.warbot.tools.geometry.PolarCoordinates;
-
+import pxl.Utils;
+import java.util.Collections;
 
 
 public abstract class WarHeavyBrainController extends  WarHeavyBrain {
@@ -36,7 +37,7 @@ public abstract class WarHeavyBrainController extends  WarHeavyBrain {
 
     private static final int MAX_DISTANCE_FROM_BASE = 100;
     private static final int MAX_DISTANCE_FROM_FOOD = 250;
-    
+
     private String ctask = "defender";
     private HeavyGroup group = HeavyGroup.DEFENDER;
 
@@ -83,7 +84,7 @@ public abstract class WarHeavyBrainController extends  WarHeavyBrain {
         return move();
     }
 
-    // DEFENDER ctask,  patrouille autour de sa base. 
+    // DEFENDER ctask,  patrouille autour de sa base.
     public String defender() {
         setDebugString("HEAVY : Je Defend la base");
         setRandomHeading(5);
@@ -96,22 +97,27 @@ public abstract class WarHeavyBrainController extends  WarHeavyBrain {
         }
     return move();
     }
-    public String shoot() {
-        List<WarAgentPercept> wps = getPerceptsEnemies();        
-        for (WarAgentPercept wp : wps) {
-            if (!wp.getType().equals(WarAgentType.WarHeavy) &&
-                !wp.getType().equals(WarAgentType.WarFood) &&
-                !wp.getType().equals(WarAgentType.WarExplorer)) {
 
-                setHeading(wp.getAngle());
-                this.setDebugString("Attaque");
+
+    public String shoot() {
+        List <WarAgentPercept> percepts = getPercepts();
+        percepts.removeIf(p -> !isEnemy(p));
+
+        if (percepts.isEmpty()) {
+            return null;
+        }
+
+        Collections.sort(percepts, (w1, w2) -> Double.compare(w1.getDistance(),w2.getDistance()));
+        WarAgentPercept enemy = percepts.get(0);
+        double angle = Utils.getShotAngle(enemy);
+        if (angle != 0) {
+            setHeading(angle);
                 if (isReloaded())
                     return fire();
                 else if (isReloading())
                     return null;
                 else
                     return beginReloadWeapon();
-            }
         }
         return null;
     }
@@ -123,7 +129,7 @@ public abstract class WarHeavyBrainController extends  WarHeavyBrain {
 		}
 		return null;
     }
-    
+
     private WarMessage getBase() {
 		broadcastMessageToAgentType(WarAgentType.WarBase, "Where is the base ?", "");
 		List<WarMessage> messages = getMessages();
@@ -148,7 +154,7 @@ public abstract class WarHeavyBrainController extends  WarHeavyBrain {
 		}
 		return null;
     }
-    
+
     public String reflexes() {
         handleChangeGroup();
         sendMessage();
