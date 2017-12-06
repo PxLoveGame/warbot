@@ -9,6 +9,9 @@ import edu.warbot.brains.brains.WarLightBrain;
 import edu.warbot.communications.WarMessage;
 import edu.warbot.tools.geometry.PolarCoordinates;
 
+import edu.warbot.agents.projectiles.WarBullet;
+
+
 import pxl.Utils;
 import java.util.Collections;
 
@@ -108,7 +111,7 @@ public abstract class WarLightBrainController extends WarLightBrain {
 
         Collections.sort(percepts, (w1, w2) -> Double.compare(w1.getDistance(),w2.getDistance()));
         WarAgentPercept enemy = percepts.get(0);
-        double angle = Utils.getShotAngle(enemy);
+        double angle = Utils.getShotAngle(enemy, WarBullet.SPEED);
         if (angle != 0) {
             setHeading(angle);
                 if (isReloaded())

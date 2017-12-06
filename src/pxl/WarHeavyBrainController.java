@@ -12,6 +12,9 @@ import edu.warbot.tools.geometry.PolarCoordinates;
 import pxl.Utils;
 import java.util.Collections;
 
+import edu.warbot.agents.projectiles.WarShell;
+
+
 
 public abstract class WarHeavyBrainController extends  WarHeavyBrain {
 
@@ -109,7 +112,7 @@ public abstract class WarHeavyBrainController extends  WarHeavyBrain {
 
         Collections.sort(percepts, (w1, w2) -> Double.compare(w1.getDistance(),w2.getDistance()));
         WarAgentPercept enemy = percepts.get(0);
-        double angle = Utils.getShotAngle(enemy);
+        double angle = Utils.getShotAngle(enemy, WarShell.SPEED);
         if (angle != 0) {
             setHeading(angle);
                 if (isReloaded())
