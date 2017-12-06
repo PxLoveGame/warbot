@@ -53,7 +53,7 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 									"explorer group",
 									group.toString(),
 									String.valueOf(getNbElementsInBag()));
-		handleEnemyBase();
+		sendEnemyBase();	
 	}
 
 	public void handleChangeGroup() {
@@ -72,7 +72,7 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 		}
 	}
 
-	public void handleEnemyBase() {
+	public void sendEnemyBase() {
 		WarAgentPercept enemyBase = getEnemyBase();
 		if (enemyBase != null) {
 			broadcastMessageToAll("Enemy Base !!");
@@ -80,6 +80,25 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 										"enemy base",
 										String.valueOf(enemyBase.getDistance()),
 										String.valueOf(enemyBase.getAngle()));
+		}
+	}
+
+	public void sendEnemyTarget(){
+		List<WarAgentPercept> percepts_enemyTarget = getPercepts();
+		percepts_enemyTarget.removeIf((e) ->  !isEnemy(e));
+		percepts_enemyTarget.removeIf((e) ->  e.getType() != WarAgentType.WarBase && e.getType() != WarAgentType.WarTurret);
+		if(percepts_enemyTarget != null && percepts_enemyTarget.size() != 0){
+
+			Collections.sort(percepts_enemyTarget, (w1, w2) -> Double.compare(w1.getDistance(),w2.getDistance()));
+			WarAgentPercept enemyTurret = percepts_enemyTarget.get(0);
+
+			broadcastMessageToAgentType(WarAgentType.WarRocketLauncher,
+										"Target here",
+										String.valueOf(enemyTurret.getDistance()),
+										String.valueOf(enemyTurret.getAngle()));
+			this.ctask = "waitForRocket";
+		} else {
+			this.ctask = "explore";
 		}
 	}
 
@@ -154,8 +173,15 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 
 	public String explore() {
 		setDebugString("explore");
+		sendEnemyTarget();
 		setRandomHeading(5);
 		return move();
+	}
+
+	public String waitForRocket(){
+		setDebugString("Target just here");
+		sendEnemyTarget();
+		return idle();
 	}
 
 	private PolarCoordinates getFoodLocationFromBase() {
