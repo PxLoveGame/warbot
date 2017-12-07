@@ -26,7 +26,7 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 	private static final int MAX_HEAVY = 10;
 	private static final int MAX_EXPLORER = 7;
 	private static final int MAX_ENGINEER = 2;
-	private static final int MAX_ROCKETLAUNCHER = 2;
+	private static final int MAX_ROCKETLAUNCHER = 4;
 	private static final int MAX_KAMIKAZE = 0;
 	private PolarCoordinates foodLocation;
 	private PolarCoordinates enemyBaseLocation;
@@ -58,7 +58,6 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 		updateFighterLight();
 	}
 
-	//Bien jouer à Ronan pour ces super méthodes ! clap!clap!clap! (j'ai fais l'amour à ta maman)
 	public void updateFighterLight(){
 		List<WarMessage> messages = getMessages();
 		ArrayList<WarMessage> fighters = new ArrayList<>();
@@ -175,6 +174,7 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 	public String createUnits(){
 		int[] nbUnits = calculateUnits();
 		if(nbUnits[1] < MAX_HEAVY) setNextAgentToCreate(WarAgentType.WarHeavy);
+		if(nbUnits[4] < MAX_ROCKETLAUNCHER) setNextAgentToCreate(WarAgentType.WarRocketLauncher);
 		if(nbUnits[0] < MAX_LIGHT) setNextAgentToCreate(WarAgentType.WarLight);
 		if(nbUnits[3] < MAX_ENGINEER) setNextAgentToCreate(WarAgentType.WarEngineer);
 		if(nbUnits[2] < MAX_EXPLORER) setNextAgentToCreate(WarAgentType.WarExplorer);

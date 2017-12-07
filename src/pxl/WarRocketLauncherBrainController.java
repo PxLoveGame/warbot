@@ -15,25 +15,59 @@ import java.util.ArrayList;
 
 public abstract class WarRocketLauncherBrainController extends WarRocketLauncherBrain {
 
-    private String ctask = "waitingInstruction";
-    
-    private static final double MIN_DISTANCE_FROM_ENEMYTARGET = (WarRocket.AUTONOMY * WarRocket.SPEED);
-    private static final int MAX_DISTANCE_FROM_FOOD = 200;
+	private String ctask = "waitingInstruction";
 
-    public WarRocketLauncherBrainController() {
-        super();
-    }
+	private static final double MIN_DISTANCE_FROM_ENEMYTARGET = (WarRocket.AUTONOMY * WarRocket.SPEED);
+	private static final int MAX_DISTANCE_FROM_FOOD = 200;
 
-    private void handleMessages(){
-        List<WarMessage> messages = getMessages();
-        for(WarMessage message : messages){
-            if(message.getMessage().equals("Target here")){
-                this.ctask = "OrderToShoot";
-            }
-        }
-    }
+	public WarRocketLauncherBrainController() {
+		super();
+	}
 
-    private PolarCoordinates getFoodLocationFromBase() {
+	private void handleMessages(){
+		List<WarMessage> messages = getMessages();
+		for(WarMessage message : messages){
+			if(message.getMessage().equals("Target here")) {
+				this.ctask = "orderToShoot";
+			}
+		}
+	}
+
+	public String orderToShoot() {
+		setDebugString("Let's go break some noobs !");
+		PolarCoordinates targetLocation = getTargetLocationFromExplorer();
+		if(targetLocation != null){
+			setHeading(targetLocation.getAngle());
+			if(targetLocation.getDistance() <= MIN_DISTANCE_FROM_ENEMYTARGET){
+				this.setTargetDistance(targetLocation.getDistance());
+				if (isReloaded())
+					return fire();
+				else if (isReloading())
+					return idle();
+				else
+					return beginReloadWeapon();
+			} else {
+				return move();
+			}
+		} else {
+			this.ctask = "waitingInstruction";
+		}
+		return idle();
+	}
+
+	public String waitingInstruction() {
+		setDebugString("Waiting for instructions !");
+		PolarCoordinates foodLocation = getFoodLocationFromBase();
+		if (foodLocation != null) {
+			if (foodLocation.getDistance() > MAX_DISTANCE_FROM_FOOD) {
+				setHeading(foodLocation.getAngle());
+			}
+		}
+		setRandomHeading(5);
+		return move();
+	}
+
+	private PolarCoordinates getFoodLocationFromBase() {
 		List<WarMessage> messages = getMessages();
 		for(WarMessage message : messages){
 			if(message.getMessage().equals("food location")) {
@@ -45,22 +79,10 @@ public abstract class WarRocketLauncherBrainController extends WarRocketLauncher
 			}
 		}
 		return null;
-    }
+	}
 
-    public String waitingInstruction(){
-        setDebugString("Waiting for instructions !");
-        PolarCoordinates foodLocation = getFoodLocationFromBase();
-        if (foodLocation != null) {
-            if (foodLocation.getDistance() > MAX_DISTANCE_FROM_FOOD) {
-                setHeading(foodLocation.getAngle());
-            }
-        }
-        setRandomHeading(5);
-        return move();
-    }
-
-    private PolarCoordinates getTargetLocationFromExplorer(){
-        List<WarMessage> messages = getMessages();
+	private PolarCoordinates getTargetLocationFromExplorer(){
+		List<WarMessage> messages = getMessages();
 		for(WarMessage message : messages){
 			if(message.getMessage().equals("Target here")) {
 				String[] content = message.getContent();
@@ -71,53 +93,33 @@ public abstract class WarRocketLauncherBrainController extends WarRocketLauncher
 			}
 		}
 		return null;
-    }
+	}
 
-    public String OrderToShoot(){
-        setDebugString("Let's go break some noobs !" + isReloading());
-        PolarCoordinates targetLocation = getTargetLocationFromExplorer();
-        if(targetLocation != null){
-            setHeading(targetLocation.getAngle());
-            if(targetLocation.getDistance() <= MIN_DISTANCE_FROM_ENEMYTARGET){
-                this.setTargetDistance(targetLocation.getDistance());
-                if (isReloaded())
-                    return fire();
-                else if (isReloading())
-                    return idle();
-                else
-                    return beginReloadWeapon();
-            } else {
-                return move();
-            }
-        }
-        return idle();   
-    }
-    
-    public String reflexes() {
-        handleMessages();
-        return null;
-    }
+	public String reflexes() {
+		handleMessages();
+		return null;
+	}
 
-    @Override
-    public String action() {
-        String action = reflexes();
-        if (action != null) { return action; }
+	@Override
+	public String action() {
+		String action = reflexes();
+		if (action != null) { return action; }
 
-        Class c = this.getClass();
-        Method method;
+		Class c = this.getClass();
+		Method method;
 
-        action = move(); // default Action
-        try {
-            method = c.getMethod(ctask);
-            action = (String) method.invoke(this);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+		action = move(); // default Action
+		try {
+			method = c.getMethod(ctask);
+			action = (String) method.invoke(this);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
-        if (isBlocked()) setRandomHeading();
+		if (isBlocked()) setRandomHeading();
 
-        return action;
+		return action;
 
-    }
+	}
 
 }

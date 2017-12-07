@@ -10,6 +10,7 @@ import java.lang.reflect.Method;
 import edu.warbot.agents.enums.WarAgentType;
 import edu.warbot.agents.percepts.WarAgentPercept;
 import pxl.Utils;
+import edu.warbot.brains.capacities.Building;
 
 public abstract class WarEngineerBrainController extends WarEngineerBrain {
 
@@ -30,13 +31,24 @@ public abstract class WarEngineerBrainController extends WarEngineerBrain {
 
 	public String goToBase() {
 		setDebugString("ENGINEER : Go To Base");
-		WarMessage base = getBase();
-		if (base != null) {
-			if (base.getDistance() > Utils.MAX_DISTANCE_FROM_BASE) {
+		List<WarAgentPercept> percepts = getPerceptsAlliesByType(WarAgentType.WarBase);
+
+		if(percepts == null || percepts.size() == 0){
+			WarMessage base = getBase();
+			if (base != null) {
 				setHeading(base.getAngle());
 			}
+		} else {
+			WarAgentPercept base = percepts.get(0);
+
+			if(base.getDistance() > Building.MAX_DISTANCE_BUILD){
+				setDebugString("dist : " + base.getDistance());
+				setHeading(base.getAngle());
+			} else {
+				setIdNextBuildingToRepair(base.getID());
+				return repair();
+			}
 		}
-		setRandomHeading(5);
 		return move();
 	}
 
@@ -44,10 +56,10 @@ public abstract class WarEngineerBrainController extends WarEngineerBrain {
 		setDebugString("ENGINEER : Go To Food");
 		PolarCoordinates foodLocation = getFoodLocationFromBase();
 		if (foodLocation != null) {
-			if (foodLocation.getDistance() > Utils.MAX_DISTANCE_FROM_FOOD) {
+			if (foodLocation.getDistance() > Utils.MAX_DISTANCE_FROM_FOOD - 50) {
 				setHeading(foodLocation.getAngle());
 			} else {
-				if (Math.random() * 100 <= 1) {
+				if (Math.random() * 200 <= 1) {
 					setNextBuildingToBuild(WarAgentType.WarTurret);
 					ctask = "goToBase";
 					return build();

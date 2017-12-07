@@ -36,6 +36,8 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 		}
 	}
 
+	public  boolean init_tick = true;
+
 	private static final int MAX_TIMER = 600;
 	private static final int MAX_DISTANCE_FROM_FOOD = 250;
 
@@ -53,7 +55,7 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 									"explorer group",
 									group.toString(),
 									String.valueOf(getNbElementsInBag()));
-		sendEnemyBase();	
+		sendEnemyBase();
 	}
 
 	public void handleChangeGroup() {
@@ -88,14 +90,12 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 		percepts_enemyTarget.removeIf((e) ->  !isEnemy(e));
 		percepts_enemyTarget.removeIf((e) ->  e.getType() != WarAgentType.WarBase && e.getType() != WarAgentType.WarTurret);
 		if(percepts_enemyTarget != null && percepts_enemyTarget.size() != 0){
-
 			Collections.sort(percepts_enemyTarget, (w1, w2) -> Double.compare(w1.getDistance(),w2.getDistance()));
 			WarAgentPercept enemyTurret = percepts_enemyTarget.get(0);
 
-			broadcastMessageToAgentType(WarAgentType.WarRocketLauncher,
-										"Target here",
-										String.valueOf(enemyTurret.getDistance()),
-										String.valueOf(enemyTurret.getAngle()));
+			broadcastMessageToAll("Target here",
+									String.valueOf(enemyTurret.getDistance()),
+									String.valueOf(enemyTurret.getAngle()));
 			this.ctask = "waitForRocket";
 		} else {
 			this.ctask = "explore";
@@ -112,9 +112,9 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 		}
 		setDebugString("findFood, sac : " + getNbElementsInBag() + " Timer : "+ food_timer);
 		List<WarAgentPercept> percepts_ressource = getPercepts();
-		boolean noFoodAround = percepts_ressource == null || percepts_ressource.size() == 0;
+		percepts_ressource.removeIf(r -> !r.getType().equals(WarAgentType.WarFood));
 
-		if(noFoodAround) {
+		if(percepts_ressource.isEmpty()) {
 			WarMessage food = getFoodFromOtherExplorer();
 			if(food != null) {
 				setHeading(food.getAngle());
@@ -128,18 +128,15 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 				setRandomHeading(5);
 			}
 		} else {
-			percepts_ressource.removeIf(r -> !r.getType().equals(WarAgentType.WarFood));
-			if (percepts_ressource.size() > 0) {
-				Collections.sort(percepts_ressource, (w1, w2) -> Double.compare(w1.getDistance(),w2.getDistance()));
-				WarAgentPercept ressource = percepts_ressource.get(0);
-				setHeading(ressource.getAngle());
-				setDebugString("Nourriture à proximité");
-				broadcastMessageToAll("food around here");
-				setHeading(ressource.getAngle());
-				if(ressource.getDistance() < WarFood.MAX_DISTANCE_TAKE){
-					food_timer = MAX_TIMER;
-					return take();
-				}
+			Collections.sort(percepts_ressource, (w1, w2) -> Double.compare(w1.getDistance(),w2.getDistance()));
+			WarAgentPercept ressource = percepts_ressource.get(0);
+			setHeading(ressource.getAngle());
+			setDebugString("Nourriture à proximité");
+			broadcastMessageToAll("food around here");
+			setHeading(ressource.getAngle());
+			if(ressource.getDistance() < WarFood.MAX_DISTANCE_TAKE){
+				food_timer = MAX_TIMER;
+				return take();
 			}
 		}
 		return move();
@@ -226,6 +223,10 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 	}
 
 	private void reflexes() {
+		if (init_tick) {
+			setHeading(0);
+			init_tick = false;
+		}
 		handleChangeGroup();
 		sendMessage();
 	}
