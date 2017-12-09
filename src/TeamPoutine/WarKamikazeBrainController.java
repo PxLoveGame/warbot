@@ -1,4 +1,4 @@
-package pxl;
+package TeamPoutine;
 
 import edu.warbot.agents.agents.WarExplorer;
 import edu.warbot.agents.percepts.WarAgentPercept;

@@ -1,29 +1,27 @@
-package pxl;
+package TeamPoutine;
 
 import java.util.List;
 import java.lang.reflect.Method;
+
 import edu.warbot.agents.enums.WarAgentType;
 import edu.warbot.agents.percepts.WarAgentPercept;
-import edu.warbot.brains.brains.WarHeavyBrain;
-import edu.warbot.brains.brains.WarRocketLauncherBrain;
+import edu.warbot.brains.brains.WarLightBrain;
 import edu.warbot.communications.WarMessage;
-
 import edu.warbot.tools.geometry.PolarCoordinates;
-import pxl.Utils;
+
+import edu.warbot.agents.projectiles.WarBullet;
+
+
+import TeamPoutine.Utils;
 import java.util.Collections;
 
-import edu.warbot.agents.projectiles.WarShell;
 
+public abstract class WarLightBrainController extends WarLightBrain {
 
-
-public abstract class WarHeavyBrainController extends  WarHeavyBrain {
-
-
-
-    public static enum HeavyGroup {
+    public static enum LightGroup {
 		FIGHTER, DEFENDER;
 
-		public static HeavyGroup fromInteger(int x) {
+		public static LightGroup fromInteger(int x) {
 			switch(x) {
 			case 0:
 				return FIGHTER;
@@ -42,9 +40,9 @@ public abstract class WarHeavyBrainController extends  WarHeavyBrain {
     private static final int MAX_DISTANCE_FROM_FOOD = 250;
 
     private String ctask = "defender";
-    private HeavyGroup group = HeavyGroup.DEFENDER;
+    private LightGroup group = LightGroup.DEFENDER;
 
-    public WarHeavyBrainController() {
+    public WarLightBrainController() {
         super();
     }
 
@@ -53,20 +51,21 @@ public abstract class WarHeavyBrainController extends  WarHeavyBrain {
 		for (WarMessage message : messages) {
 			setDebugString(message.getMessage());
 			if (message.getMessage().equals("change group")) {
-				if (group == HeavyGroup.DEFENDER) {
-					group = HeavyGroup.FIGHTER;
+				if (group == LightGroup.DEFENDER) {
+					group = LightGroup.FIGHTER;
 					ctask = "fighter";
-				} else if (group == HeavyGroup.FIGHTER) {
-					group = HeavyGroup.DEFENDER;
+				} else if (group == LightGroup.FIGHTER) {
+					group = LightGroup.DEFENDER;
 					ctask = "defender";
 				}
 			}
 		}
     }
 
+    // ToDo : Pas bouger toutes les unités / faire le même type de message pour les tours
     public void sendMessage() {
         broadcastMessageToAgentType(WarAgentType.WarBase, "Ready to break some ass", "");
-        broadcastMessageToAgentType(WarAgentType.WarBase,"Heavy group",group.toString());
+        broadcastMessageToAgentType(WarAgentType.WarBase,"Light group", group.toString());
         List<WarAgentPercept> wps = getPerceptsEnemies();
         for (WarAgentPercept wp : wps) {
             if (wp.getType().equals(WarAgentType.WarBase)) {
@@ -75,8 +74,9 @@ public abstract class WarHeavyBrainController extends  WarHeavyBrain {
         }
     }
 
+    // Fighter ctask, explore autour de la zone de nourriture.
     public String fighter(){
-        setDebugString("HEAVY : J'attaque la base enemies");
+        setDebugString("LIGHT : J'attaque la base enemies");
         PolarCoordinates foodLocation = getFoodLocationFromBase();
         if (foodLocation != null) {
             if (foodLocation.getDistance() > MAX_DISTANCE_FROM_FOOD) {
@@ -89,7 +89,7 @@ public abstract class WarHeavyBrainController extends  WarHeavyBrain {
 
     // DEFENDER ctask,  patrouille autour de sa base.
     public String defender() {
-        setDebugString("HEAVY : Je Defend la base");
+        setDebugString("LIGHT : Je Defend la base");
         setRandomHeading(5);
 
         WarMessage base = getBase();
@@ -101,7 +101,6 @@ public abstract class WarHeavyBrainController extends  WarHeavyBrain {
     return move();
     }
 
-
     public String shoot() {
         List <WarAgentPercept> percepts = getPercepts();
         percepts.removeIf(p -> !isEnemy(p));
@@ -112,7 +111,7 @@ public abstract class WarHeavyBrainController extends  WarHeavyBrain {
 
         Collections.sort(percepts, (w1, w2) -> Double.compare(w1.getDistance(),w2.getDistance()));
         WarAgentPercept enemy = percepts.get(0);
-        double angle = Utils.getShotAngle(enemy, WarShell.SPEED);
+        double angle = Utils.getShotAngle(enemy, WarBullet.SPEED);
         if (angle != 0) {
             setHeading(angle);
                 if (isReloaded())

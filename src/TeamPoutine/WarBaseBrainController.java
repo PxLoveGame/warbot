@@ -1,4 +1,4 @@
-package pxl;
+package TeamPoutine;
 
 import edu.warbot.agents.agents.WarBase;
 import edu.warbot.agents.enums.WarAgentCategory;
@@ -7,9 +7,9 @@ import edu.warbot.agents.percepts.WarAgentPercept;
 import edu.warbot.brains.brains.WarBaseBrain;
 import edu.warbot.communications.WarMessage;
 import edu.warbot.tools.geometry.PolarCoordinates;
-import pxl.WarExplorerBrainController.ExplorerGroup;
-import pxl.WarLightBrainController.LightGroup;
-import pxl.WarHeavyBrainController.HeavyGroup;
+import TeamPoutine.WarExplorerBrainController.ExplorerGroup;
+import TeamPoutine.WarLightBrainController.LightGroup;
+import TeamPoutine.WarHeavyBrainController.HeavyGroup;
 
 
 import java.lang.reflect.Method;

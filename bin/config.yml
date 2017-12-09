@@ -1,9 +1,9 @@
-Name: PxL
-IconPath: team.png
+Name: TeamPoutine
+IconPath: swag.jpg
 SoundPath: team.wav
 Description: |
-    blablabla
-BrainsPackage: pxl
+    Spetnaz spécialement entrainé par Poutine lui même.
+BrainsPackage: TeamPoutine
 AgentsBrainClasses:
     WarBase: WarBaseBrainController
     WarExplorer: WarExplorerBrainController
