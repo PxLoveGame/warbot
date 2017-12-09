@@ -18,7 +18,7 @@ import java.util.Collections;
 
 public abstract class WarLightBrainController extends WarLightBrain {
 
-    public static enum LightGroup {
+	public static enum LightGroup {
 		FIGHTER, DEFENDER;
 
 		public static LightGroup fromInteger(int x) {
@@ -34,19 +34,16 @@ public abstract class WarLightBrainController extends WarLightBrain {
 		public String toString() {
 			return String.valueOf(this.ordinal());
 		}
-    }
+	}
 
-    private static final int MAX_DISTANCE_FROM_BASE = 100;
-    private static final int MAX_DISTANCE_FROM_FOOD = 250;
+	private String ctask = "defender";
+	private LightGroup group = LightGroup.DEFENDER;
 
-    private String ctask = "defender";
-    private LightGroup group = LightGroup.DEFENDER;
+	public WarLightBrainController() {
+		super();
+	}
 
-    public WarLightBrainController() {
-        super();
-    }
-
-    public void handleChangeGroup() {
+	public void handleChangeGroup() {
 		List<WarMessage> messages = getMessages();
 		for (WarMessage message : messages) {
 			setDebugString(message.getMessage());
@@ -60,79 +57,79 @@ public abstract class WarLightBrainController extends WarLightBrain {
 				}
 			}
 		}
-    }
+	}
 
-    // ToDo : Pas bouger toutes les unités / faire le même type de message pour les tours
-    public void sendMessage() {
-        broadcastMessageToAgentType(WarAgentType.WarBase, "Ready to break some ass", "");
-        broadcastMessageToAgentType(WarAgentType.WarBase,"Light group", group.toString());
-        List<WarAgentPercept> wps = getPerceptsEnemies();
-        for (WarAgentPercept wp : wps) {
-            if (wp.getType().equals(WarAgentType.WarBase)) {
-                broadcastMessageToAll("Enemy Base !!");
-            }
-        }
-    }
+	// ToDo : Pas bouger toutes les unités / faire le même type de message pour les tours
+	public void sendMessage() {
+		broadcastMessageToAgentType(WarAgentType.WarBase, "Ready to break some ass", "");
+		broadcastMessageToAgentType(WarAgentType.WarBase,"Light group", group.toString());
+		List<WarAgentPercept> wps = getPerceptsEnemies();
+		for (WarAgentPercept wp : wps) {
+			if (wp.getType().equals(WarAgentType.WarBase)) {
+				broadcastMessageToAll("Enemy Base !!");
+			}
+		}
+	}
 
-    // Fighter ctask, explore autour de la zone de nourriture.
-    public String fighter(){
-        setDebugString("LIGHT : J'attaque la base enemies");
-        PolarCoordinates foodLocation = getFoodLocationFromBase();
-        if (foodLocation != null) {
-            if (foodLocation.getDistance() > MAX_DISTANCE_FROM_FOOD) {
-                setHeading(foodLocation.getAngle());
-            }
-        }
-        setRandomHeading(5);
-        return move();
-    }
+	// Fighter ctask, explore autour de la zone de nourriture.
+	public String fighter(){
+		setDebugString("LIGHT : J'attaque la base enemies");
+		PolarCoordinates foodLocation = getFoodLocationFromBase();
+		if (foodLocation != null) {
+			if (foodLocation.getDistance() > Utils.MAX_DISTANCE_FROM_FOOD) {
+				setHeading(foodLocation.getAngle());
+			}
+		}
+		setRandomHeading(5);
+		return move();
+	}
 
-    // DEFENDER ctask,  patrouille autour de sa base.
-    public String defender() {
-        setDebugString("LIGHT : Je Defend la base");
-        setRandomHeading(5);
+	// DEFENDER ctask,  patrouille autour de sa base.
+	public String defender() {
+		setDebugString("LIGHT : Je Defend la base");
+		setRandomHeading(5);
 
-        WarMessage base = getBase();
-        if (base != null) {
-            if (base.getDistance() > MAX_DISTANCE_FROM_BASE) {
-                setHeading(base.getAngle());
-            }
-        }
-    return move();
-    }
+		WarMessage base = getBase();
+		if (base != null) {
+			if (base.getDistance() > Utils.MAX_DISTANCE_FROM_BASE) {
+				setHeading(base.getAngle());
+			}
+		}
+	return move();
+	}
 
-    public String shoot() {
-        List <WarAgentPercept> percepts = getPercepts();
-        percepts.removeIf(p -> !isEnemy(p));
+	public String shoot() {
+		List <WarAgentPercept> percepts = getPercepts();
+		percepts.removeIf(p -> !isEnemy(p));
 
-        if (percepts.isEmpty()) {
-            return null;
-        }
+		if (percepts.isEmpty()) {
+			return null;
+		}
 
-        Collections.sort(percepts, (w1, w2) -> Double.compare(w1.getDistance(),w2.getDistance()));
-        WarAgentPercept enemy = percepts.get(0);
-        double angle = Utils.getShotAngle(enemy, WarBullet.SPEED);
-        if (angle != 0) {
-            setHeading(angle);
-                if (isReloaded())
-                    return fire();
-                else if (isReloading())
-                    return null;
-                else
-                    return beginReloadWeapon();
-        }
-        return null;
-    }
+		Collections.sort(percepts, (w1, w2) -> Double.compare(w1.getDistance(),w2.getDistance()));
+		WarAgentPercept enemy = percepts.get(0);
+		double angle = Utils.getShotAngle(enemy, WarBullet.SPEED);
+		if (angle != 0) {
+			setHeading(angle);
+				if (isReloaded())
+					return fire();
+				else if (isReloading())
+					return null;
+				else
+					return beginReloadWeapon();
+		}
+		return null;
+	}
 
-    private WarMessage getEnemyBase(){
+	private WarMessage getEnemyBase(){
 		List<WarMessage> messages = getMessages();
 		for(WarMessage message : messages){
 			if(message.getMessage().equals("Enemy Base !!")) return message;
 		}
 		return null;
-    }
+	}
 
-    private WarMessage getBase() {
+	private WarMessage getBase() {
 		broadcastMessageToAgentType(WarAgentType.WarBase, "Where is the base ?", "");
 		List<WarMessage> messages = getMessages();
 		for(WarMessage message : messages) {
@@ -143,7 +140,7 @@ public abstract class WarLightBrainController extends WarLightBrain {
 		return null;
 	}
 
-    private PolarCoordinates getFoodLocationFromBase() {
+	private PolarCoordinates getFoodLocationFromBase() {
 		List<WarMessage> messages = getMessages();
 		for(WarMessage message : messages){
 			if(message.getMessage().equals("food location")) {
@@ -155,32 +152,32 @@ public abstract class WarLightBrainController extends WarLightBrain {
 			}
 		}
 		return null;
-    }
+	}
 
-    public String reflexes() {
-        handleChangeGroup();
-        sendMessage();
-        return shoot();
-    }
+	public String reflexes() {
+		handleChangeGroup();
+		sendMessage();
+		return shoot();
+	}
 
-    public String action() {
-        String action = reflexes();
-        if (action != null) { return action; }
+	public String action() {
+		String action = reflexes();
+		if (action != null) { return action; }
 
-        Class c = this.getClass();
-        Method method;
+		Class c = this.getClass();
+		Method method;
 
-        action = move(); // default Action
-        try {
-            method = c.getMethod(ctask);
-            action = (String) method.invoke(this);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+		action = move(); // default Action
+		try {
+			method = c.getMethod(ctask);
+			action = (String) method.invoke(this);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
-        if (isBlocked()) setRandomHeading();
+		if (isBlocked()) setRandomHeading();
 
-        return action;
-    }
+		return action;
+	}
 
 }

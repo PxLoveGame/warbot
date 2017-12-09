@@ -18,7 +18,6 @@ public abstract class WarRocketLauncherBrainController extends WarRocketLauncher
 	private String ctask = "waitingInstruction";
 
 	private static final double MIN_DISTANCE_FROM_ENEMYTARGET = (WarRocket.AUTONOMY * WarRocket.SPEED);
-	private static final int MAX_DISTANCE_FROM_FOOD = 200;
 
 	public WarRocketLauncherBrainController() {
 		super();
@@ -59,7 +58,7 @@ public abstract class WarRocketLauncherBrainController extends WarRocketLauncher
 		setDebugString("Waiting for instructions !");
 		PolarCoordinates foodLocation = getFoodLocationFromBase();
 		if (foodLocation != null) {
-			if (foodLocation.getDistance() > MAX_DISTANCE_FROM_FOOD) {
+			if (foodLocation.getDistance() > Utils.MAX_DISTANCE_FROM_FOOD - 50) {
 				setHeading(foodLocation.getAngle());
 			}
 		}

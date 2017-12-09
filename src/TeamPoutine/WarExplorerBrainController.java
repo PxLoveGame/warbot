@@ -16,6 +16,8 @@ import edu.warbot.agents.resources.WarFood;
 import edu.warbot.brains.brains.WarExplorerBrain;
 import edu.warbot.communications.WarMessage;
 
+import TeamPoutine.Utils;
+
 public abstract class WarExplorerBrainController extends WarExplorerBrain {
 
 	public static enum ExplorerGroup {
@@ -39,7 +41,6 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 	public  boolean init_tick = true;
 
 	private static final int MAX_TIMER = 600;
-	private static final int MAX_DISTANCE_FROM_FOOD = 250;
 
 	private String ctask = "findFood";
 	private int food_timer = MAX_TIMER;
@@ -121,7 +122,7 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 			} else {
 				PolarCoordinates foodLocation = getFoodLocationFromBase();
 				if (foodLocation != null) {
-					if (foodLocation.getDistance() > MAX_DISTANCE_FROM_FOOD) {
+					if (foodLocation.getDistance() > Utils.MAX_DISTANCE_FROM_FOOD) {
 						setHeading(foodLocation.getAngle());
 					}
 				}
