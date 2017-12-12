@@ -3,4 +3,5 @@ bin/
 .settings/
 
 !bin/config.yml
-!bin/team.png
+!bin/swag.jpg
+
