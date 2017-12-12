@@ -44,7 +44,7 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 
 	private String ctask = "findFood";
 	private int food_timer = MAX_TIMER;
-	private ExplorerGroup group = ExplorerGroup.EXPLORER;
+	private ExplorerGroup group = ExplorerGroup.HARVESTER;
 
 	public WarExplorerBrainController() {
 		super();
@@ -146,7 +146,6 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 		}
 		setDebugString("returnToBase, sac : " + getNbElementsInBag());
 		List<WarAgentPercept> percepts = getPerceptsAlliesByType(WarAgentType.WarBase);
-
 		if(percepts == null || percepts.size() == 0){
 			WarMessage base = getBase();
 			if (base != null) {

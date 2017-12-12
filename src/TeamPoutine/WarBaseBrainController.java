@@ -133,7 +133,7 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 			for (int i = 0; i < neededHarvesters  && i < canConvert; i++) {
 				reply(explorers.get(i), "change group");
 			}
-		} else if (explorers.size() > MIN_HARVESTER && harvesters.size() > 0) {
+		} else if (harvesters.size() > MIN_HARVESTER && explorers.size() > 2) {
 			int canConvert = harvesters.size() - MIN_HARVESTER - 1;
 			for (int i = 0; i < canConvert; i++) {
 				reply(harvesters.get(i), "change group");
@@ -222,7 +222,7 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 
 	private String emergency(){
 		List<WarAgentPercept> percepts = getPerceptsEnemies();
-		percepts.removeIf((e) -> e.getType() == WarAgentType.WarExplorer || e.getType() == WarAgentType.WarEngineer)
+		percepts.removeIf((e) -> e.getType() == WarAgentType.WarExplorer || e.getType() == WarAgentType.WarEngineer);
 		if(percepts.size() >= 1){
 			if(getHealth() >= getMaxHealth() * 0.6 && getHealth() < getMaxHealth() * 0.8){
 				setNextAgentToCreate(WarAgentType.WarHeavy);
