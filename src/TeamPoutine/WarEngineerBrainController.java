@@ -70,6 +70,15 @@ public abstract class WarEngineerBrainController extends WarEngineerBrain {
 		return move();
 	}
 
+	public Boolean runAway(){
+		WarAgentPercept target = Utils.getNearestEnemy(getPercepts());
+		if (target != null && (target.getType() == WarAgentType.WarTurret || target.getType() == WarAgentType.WarHeavy)) {
+			setHeading(target.getAngle() + 180);
+			return true;
+		}
+		return false;
+	}
+
 	@Override
 	public String action() {
 		String action = reflexes();

@@ -88,6 +88,27 @@ class Utils {
 		return null;
 	}
 
+	public static WarAgentPercept getNearestEnemyUnit(List<WarAgentPercept> percepts){
+		List<WarAgentPercept> percepts_enemyTarget = new ArrayList<>(percepts);
+		percepts_enemyTarget.removeIf((e) -> !isEnemy(e));
+		percepts_enemyTarget.removeIf((e) -> e.getType() == WarAgentType.WarBase || e.getType() == WarAgentType.WarTurret);
+		if(percepts_enemyTarget != null && percepts_enemyTarget.size() != 0){
+			Collections.sort(percepts_enemyTarget,(w1, w2) -> Double.compare(w1.getDistance(),w2.getDistance()));
+			return percepts_enemyTarget.get(0);
+		}
+		return null;
+	}
+
+	public static WarAgentPercept getNearestEnemy(List<WarAgentPercept> percepts){
+		List<WarAgentPercept> percepts_enemyTarget = new ArrayList<>(percepts);
+		percepts_enemyTarget.removeIf((e) -> !isEnemy(e));
+		if(percepts_enemyTarget != null && percepts_enemyTarget.size() != 0){
+			Collections.sort(percepts_enemyTarget,(w1, w2) -> Double.compare(w1.getDistance(),w2.getDistance()));
+			return percepts_enemyTarget.get(0);
+		}
+		return null;
+	}
+
 	public static PolarCoordinates getTargetLocationFromExplorer(List<WarMessage> ms) {
 		List<WarMessage> messages = new ArrayList<>(ms);
 		for(WarMessage message : messages){

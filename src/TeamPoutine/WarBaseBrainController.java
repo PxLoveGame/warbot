@@ -205,7 +205,7 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 	}
 
 	public void decide() {
-		if (getHealth() > getMaxHealth() * 0.9) {
+		if (getHealth() > getMaxHealth() * 0.8) {
 			ctask = "createUnits";
 		} else if (getNbElementsInBag() >= 0) {
 			ctask = "regenerate";
@@ -220,20 +220,38 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 		}
 	}
 
-	public void reflexes() {
+	private String emergency(){
+		List<WarAgentPercept> percepts = getPerceptsEnemies();
+		percepts.removeIf((e) -> e.getType() == WarAgentType.WarExplorer || e.getType() == WarAgentType.WarEngineer)
+		if(percepts.size() >= 1){
+			if(getHealth() >= getMaxHealth() * 0.6 && getHealth() < getMaxHealth() * 0.8){
+				setNextAgentToCreate(WarAgentType.WarHeavy);
+				return create();
+			}
+		}
+
+		return null;
+		
+	}
+
+	public String reflexes() {
 		setUpTeamName();
 		setDebugString("nourriture : " + getNbElementsInBag());
 		handleMessages();
 		sendMessage();
+		return emergency();
 	}
 
 	@Override
 	public String action() {
-		reflexes();
+		String action = reflexes();
+		if (action != null) { 
+			return action; 
+		}
 		decide();
 		Class c = this.getClass();
 		Method method;
-		String action = idle(); // default Action else java not happy
+		action = idle(); // default Action else java not happy
 		try {
 			method = c.getMethod(ctask);
 			action = (String) method.invoke(this);

@@ -135,9 +135,21 @@ public abstract class WarHeavyBrainController extends  WarHeavyBrain {
 		return null;
 	}
 
+	public Boolean runAway(){
+		WarAgentPercept target = Utils.getNearestEnemyBuilding(getPercepts());
+		if (target != null && target.getType() == WarAgentType.WarTurret) {
+			setHeading(target.getAngle() + 180);
+			return true;
+		}
+		return false;
+	}
+
 	public String reflexes() {
 		handleChangeGroup();
 		sendMessage();
+		if(runAway()){
+			return move();
+		}
 		return shoot();
 	}
 
