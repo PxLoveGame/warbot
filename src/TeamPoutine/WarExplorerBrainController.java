@@ -87,19 +87,11 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 	}
 
 	public void sendEnemyTarget(){
-		List<WarAgentPercept> percepts_enemyTarget = getPercepts();
-		percepts_enemyTarget.removeIf((e) ->  !isEnemy(e));
-		percepts_enemyTarget.removeIf((e) ->  e.getType() != WarAgentType.WarBase && e.getType() != WarAgentType.WarTurret);
-		if(percepts_enemyTarget != null && percepts_enemyTarget.size() != 0){
-			Collections.sort(percepts_enemyTarget, (w1, w2) -> Double.compare(w1.getDistance(),w2.getDistance()));
-			WarAgentPercept enemyTurret = percepts_enemyTarget.get(0);
-
+		WarAgentPercept target = Utils.getNearestEnemyBuilding(getPercepts());
+		if (target != null) {
 			broadcastMessageToAll("Target here",
-									String.valueOf(enemyTurret.getDistance()),
-									String.valueOf(enemyTurret.getAngle()));
-			this.ctask = "waitForRocket";
-		} else {
-			this.ctask = "explore";
+									String.valueOf(target.getDistance()),
+									String.valueOf(target.getAngle()));
 		}
 	}
 
@@ -112,7 +104,11 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 			return idle();
 		}
 		setDebugString("findFood, sac : " + getNbElementsInBag() + " Timer : "+ food_timer);
-		List<WarAgentPercept> percepts_ressource = getPercepts();
+		WarAgentPercept target = Utils.getNearestEnemyBuilding(getPercepts());
+		if (target != null) {
+			setHeading(target.getAngle() + 180);
+		}
+		List<WarAgentPercept> percepts_ressource = new ArrayList<>(getPercepts());
 		percepts_ressource.removeIf(r -> !r.getType().equals(WarAgentType.WarFood));
 
 		if(percepts_ressource.isEmpty()) {
@@ -120,7 +116,7 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 			if(food != null) {
 				setHeading(food.getAngle());
 			} else {
-				PolarCoordinates foodLocation = getFoodLocationFromBase();
+				PolarCoordinates foodLocation = Utils.getFoodLocationFromBase(getMessages());
 				if (foodLocation != null) {
 					if (foodLocation.getDistance() > Utils.MAX_DISTANCE_FROM_FOOD) {
 						setHeading(foodLocation.getAngle());
@@ -171,29 +167,36 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 
 	public String explore() {
 		setDebugString("explore");
-		sendEnemyTarget();
+		PolarCoordinates target = Utils.getTargetLocationFromExplorer(getMessages());
+		if (target != null) {
+			setHeading(target.getAngle());
+		} else if (Utils.getNearestEnemyBuilding(getPercepts()) != null) {
+			ctask = "waitForRocket";
+		}
 		setRandomHeading(5);
 		return move();
 	}
 
 	public String waitForRocket(){
 		setDebugString("Target just here");
-		sendEnemyTarget();
+		WarAgentPercept target = Utils.getNearestEnemyBuilding(getPercepts());
+		if (target != null) {
+			int attackers = getNumberOfAttacker();
+			setDebugString("" + attackers);
+			if (attackers < 3) {
+				setHeading(target.getAngle()-180);
+				//ctask = "explore";
+			}
+		} else {
+			ctask = "explore";
+		}
 		return idle();
 	}
 
-	private PolarCoordinates getFoodLocationFromBase() {
-		List<WarMessage> messages = getMessages();
-		for(WarMessage message : messages){
-			if(message.getMessage().equals("food location")) {
-				String[] content = message.getContent();
-				double distance = Double.parseDouble(content[0]);
-				double angle = Double.parseDouble(content[1]);
-				PolarCoordinates foodLocation = getTargetedAgentPosition(message.getAngle(), message.getDistance(), angle, distance);
-				return foodLocation;
-			}
-		}
-		return null;
+	private int getNumberOfAttacker() {
+		List<WarMessage> messages = new ArrayList<>(getMessages());
+		messages.removeIf((m) -> !m.getMessage().equals("Rocket attack"));
+		return messages.size();
 	}
 
 	private WarMessage getFoodFromOtherExplorer(){
@@ -229,6 +232,7 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 			init_tick = false;
 		}
 		handleChangeGroup();
+		sendEnemyTarget();
 		sendMessage();
 	}
 
@@ -247,7 +251,7 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 		}
 
 		if (isBlocked()) setRandomHeading();
-		//setDebugString(group.toString());
+		//setDebugString(group.toString() + "|" + ctask);
 
 		return action;
 	}

@@ -18,8 +18,6 @@ import edu.warbot.agents.projectiles.WarShell;
 
 public abstract class WarHeavyBrainController extends  WarHeavyBrain {
 
-
-
 	public static enum HeavyGroup {
 		FIGHTER, DEFENDER;
 
@@ -73,12 +71,16 @@ public abstract class WarHeavyBrainController extends  WarHeavyBrain {
 	}
 
 	public String fighter(){
-		setDebugString("HEAVY : J'attaque la base enemies");
-		PolarCoordinates foodLocation = getFoodLocationFromBase();
+		setDebugString("HEAVY : Patrouille dans la zone de nourriture");
+		PolarCoordinates foodLocation = Utils.getFoodLocationFromBase(getMessages());
 		if (foodLocation != null) {
 			if (foodLocation.getDistance() > Utils.MAX_DISTANCE_FROM_FOOD) {
 				setHeading(foodLocation.getAngle());
 			}
+		}
+		WarAgentPercept target = Utils.getNearestEnemyBuilding(getPercepts());
+		if (target != null) {
+			setHeading(target.getAngle() + 180);
 		}
 		setRandomHeading(5);
 		return move();
@@ -122,34 +124,12 @@ public abstract class WarHeavyBrainController extends  WarHeavyBrain {
 		return null;
 	}
 
-	private WarMessage getEnemyBase(){
-		List<WarMessage> messages = getMessages();
-		for(WarMessage message : messages){
-			if(message.getMessage().equals("Enemy Base !!")) return message;
-		}
-		return null;
-	}
-
 	private WarMessage getBase() {
 		broadcastMessageToAgentType(WarAgentType.WarBase, "Where is the base ?", "");
 		List<WarMessage> messages = getMessages();
 		for(WarMessage message : messages) {
 			if(message.getSenderType() == WarAgentType.WarBase){
 				return message;
-			}
-		}
-		return null;
-	}
-
-	private PolarCoordinates getFoodLocationFromBase() {
-		List<WarMessage> messages = getMessages();
-		for(WarMessage message : messages){
-			if(message.getMessage().equals("food location")) {
-				String[] content = message.getContent();
-				double distance = Double.parseDouble(content[0]);
-				double angle = Double.parseDouble(content[1]);
-				PolarCoordinates foodLocation = getTargetedAgentPosition(message.getAngle(), message.getDistance(), angle, distance);
-				return foodLocation;
 			}
 		}
 		return null;

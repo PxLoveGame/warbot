@@ -4,13 +4,22 @@ package TeamPoutine;
 import java.math.*;
 import edu.warbot.agents.projectiles.WarShell;
 import java.lang.reflect.Field;
+import edu.warbot.tools.geometry.PolarCoordinates;
+import edu.warbot.communications.WarMessage;
+import edu.warbot.agents.enums.WarAgentType;
+import edu.warbot.tools.WarMathTools;
+
 import edu.warbot.agents.percepts.WarAgentPercept;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.ArrayList;
 
 class Utils {
 
 	public static final int MAX_DISTANCE_FROM_FOOD = 250;
 	public static final int MAX_DISTANCE_FROM_BASE = 150;
+	public static String teamName = null;
 
 	public static double getShotAngle(WarAgentPercept enemy, double bulletSpeed) {
 		double predictionError = 1.0e-6;
@@ -52,6 +61,54 @@ class Utils {
 			System.out.println(e);
 		}
 		return 0;
+	}
+
+	public static PolarCoordinates getFoodLocationFromBase(List<WarMessage> ms) {
+		List<WarMessage> messages = new ArrayList<>(ms);
+		for(WarMessage message : messages){
+			if(message.getMessage().equals("food location")) {
+				String[] content = message.getContent();
+				double distance = Double.parseDouble(content[0]);
+				double angle = Double.parseDouble(content[1]);
+				PolarCoordinates foodLocation = getTargetedAgentPosition(message.getAngle(), message.getDistance(), angle, distance);
+				return foodLocation;
+			}
+		}
+		return null;
+	}
+
+	public static WarAgentPercept getNearestEnemyBuilding(List<WarAgentPercept> percepts) {
+		List<WarAgentPercept> percepts_enemyTarget = new ArrayList<>(percepts);
+		percepts_enemyTarget.removeIf((e) ->  !isEnemy(e));
+		percepts_enemyTarget.removeIf((e) ->  e.getType() != WarAgentType.WarBase && e.getType() != WarAgentType.WarTurret);
+		if(percepts_enemyTarget != null && percepts_enemyTarget.size() != 0){
+			Collections.sort(percepts_enemyTarget, (w1, w2) -> Double.compare(w1.getDistance(),w2.getDistance()));
+			return percepts_enemyTarget.get(0);
+		}
+		return null;
+	}
+
+	public static PolarCoordinates getTargetLocationFromExplorer(List<WarMessage> ms) {
+		List<WarMessage> messages = new ArrayList<>(ms);
+		for(WarMessage message : messages){
+			if(message.getMessage().equals("Target here")) {
+				String[] content = message.getContent();
+				double distance = Double.parseDouble(content[0]);
+				double angle = Double.parseDouble(content[1]);
+				PolarCoordinates targetLocation = getTargetedAgentPosition(message.getAngle(), message.getDistance(), angle, distance);
+				return targetLocation;
+			}
+		}
+		return null;
+	}
+
+	public static PolarCoordinates getTargetedAgentPosition(double angleToAlly, double distanceFromAlly, double angleFromAllyToTarget, double distanceBetweenAllyAndTarget) {
+		return WarMathTools.addTwoPoints(new PolarCoordinates(distanceFromAlly, angleToAlly),
+				new PolarCoordinates(distanceBetweenAllyAndTarget, angleFromAllyToTarget));
+	}
+
+	public static boolean isEnemy(WarAgentPercept percept) {
+		return !percept.getTeamName().equals(teamName);
 	}
 
 }

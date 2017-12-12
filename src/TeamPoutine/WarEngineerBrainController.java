@@ -14,7 +14,7 @@ import edu.warbot.brains.capacities.Building;
 
 public abstract class WarEngineerBrainController extends WarEngineerBrain {
 
-	private String ctask = "goToFood";
+	private String ctask = "goToFoodBuildTurret";
 
 	public WarEngineerBrainController() {
 		super();
@@ -52,11 +52,11 @@ public abstract class WarEngineerBrainController extends WarEngineerBrain {
 		return move();
 	}
 
-	public String goToFood() {
+	public String goToFoodBuildTurret() {
 		setDebugString("ENGINEER : Go To Food");
 		PolarCoordinates foodLocation = getFoodLocationFromBase();
 		if (foodLocation != null) {
-			if (foodLocation.getDistance() > Utils.MAX_DISTANCE_FROM_FOOD - 50) {
+			if (foodLocation.getDistance() > Utils.MAX_DISTANCE_FROM_FOOD - 100) {
 				setHeading(foodLocation.getAngle());
 			} else {
 				if (Math.random() * 200 <= 1) {

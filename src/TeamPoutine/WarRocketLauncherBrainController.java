@@ -34,8 +34,9 @@ public abstract class WarRocketLauncherBrainController extends WarRocketLauncher
 
 	public String orderToShoot() {
 		setDebugString("Let's go break some noobs !");
-		PolarCoordinates targetLocation = getTargetLocationFromExplorer();
-		if(targetLocation != null){
+		broadcastMessageToAll("Rocket attack");
+		PolarCoordinates targetLocation = Utils.getTargetLocationFromExplorer(getMessages());
+		if(targetLocation != null) {
 			setHeading(targetLocation.getAngle());
 			if(targetLocation.getDistance() <= MIN_DISTANCE_FROM_ENEMYTARGET){
 				this.setTargetDistance(targetLocation.getDistance());
@@ -56,7 +57,7 @@ public abstract class WarRocketLauncherBrainController extends WarRocketLauncher
 
 	public String waitingInstruction() {
 		setDebugString("Waiting for instructions !");
-		PolarCoordinates foodLocation = getFoodLocationFromBase();
+		PolarCoordinates foodLocation = Utils.getFoodLocationFromBase(getMessages());
 		if (foodLocation != null) {
 			if (foodLocation.getDistance() > Utils.MAX_DISTANCE_FROM_FOOD - 50) {
 				setHeading(foodLocation.getAngle());
@@ -64,34 +65,6 @@ public abstract class WarRocketLauncherBrainController extends WarRocketLauncher
 		}
 		setRandomHeading(5);
 		return move();
-	}
-
-	private PolarCoordinates getFoodLocationFromBase() {
-		List<WarMessage> messages = getMessages();
-		for(WarMessage message : messages){
-			if(message.getMessage().equals("food location")) {
-				String[] content = message.getContent();
-				double distance = Double.parseDouble(content[0]);
-				double angle = Double.parseDouble(content[1]);
-				PolarCoordinates foodLocation = getTargetedAgentPosition(message.getAngle(), message.getDistance(), angle, distance);
-				return foodLocation;
-			}
-		}
-		return null;
-	}
-
-	private PolarCoordinates getTargetLocationFromExplorer(){
-		List<WarMessage> messages = getMessages();
-		for(WarMessage message : messages){
-			if(message.getMessage().equals("Target here")) {
-				String[] content = message.getContent();
-				double distance = Double.parseDouble(content[0]);
-				double angle = Double.parseDouble(content[1]);
-				PolarCoordinates targetLocation = getTargetedAgentPosition(message.getAngle(), message.getDistance(), angle, distance);
-				return targetLocation;
-			}
-		}
-		return null;
 	}
 
 	public String reflexes() {

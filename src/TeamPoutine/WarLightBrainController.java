@@ -73,8 +73,8 @@ public abstract class WarLightBrainController extends WarLightBrain {
 
 	// Fighter ctask, explore autour de la zone de nourriture.
 	public String fighter(){
-		setDebugString("LIGHT : J'attaque la base enemies");
-		PolarCoordinates foodLocation = getFoodLocationFromBase();
+		setDebugString("LIGHT : Patrouille dans la zone de nourriture");
+		PolarCoordinates foodLocation = Utils.getFoodLocationFromBase(getMessages());
 		if (foodLocation != null) {
 			if (foodLocation.getDistance() > Utils.MAX_DISTANCE_FROM_FOOD) {
 				setHeading(foodLocation.getAngle());
@@ -121,34 +121,12 @@ public abstract class WarLightBrainController extends WarLightBrain {
 		return null;
 	}
 
-	private WarMessage getEnemyBase(){
-		List<WarMessage> messages = getMessages();
-		for(WarMessage message : messages){
-			if(message.getMessage().equals("Enemy Base !!")) return message;
-		}
-		return null;
-	}
-
 	private WarMessage getBase() {
 		broadcastMessageToAgentType(WarAgentType.WarBase, "Where is the base ?", "");
 		List<WarMessage> messages = getMessages();
 		for(WarMessage message : messages) {
 			if(message.getSenderType() == WarAgentType.WarBase){
 				return message;
-			}
-		}
-		return null;
-	}
-
-	private PolarCoordinates getFoodLocationFromBase() {
-		List<WarMessage> messages = getMessages();
-		for(WarMessage message : messages){
-			if(message.getMessage().equals("food location")) {
-				String[] content = message.getContent();
-				double distance = Double.parseDouble(content[0]);
-				double angle = Double.parseDouble(content[1]);
-				PolarCoordinates foodLocation = getTargetedAgentPosition(message.getAngle(), message.getDistance(), angle, distance);
-				return foodLocation;
 			}
 		}
 		return null;

@@ -19,11 +19,11 @@ import java.util.ArrayList;
 
 public abstract class WarBaseBrainController extends WarBaseBrain {
 
-	private static final int BEST_FOOD_DISTANCE = 480;
+	private static final int BEST_FOOD_DISTANCE = 450;
 
 	private String ctask = "nothingToDo";
-	private static final int MAX_LIGHT = 10;
-	private static final int MAX_HEAVY = 10;
+	private static final int MAX_LIGHT = 6;
+	private static final int MAX_HEAVY = 6;
 	private static final int MAX_EXPLORER = 7;
 	private static final int MAX_ENGINEER = 2;
 	private static final int MAX_ROCKETLAUNCHER = 4;
@@ -32,8 +32,8 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 	private PolarCoordinates enemyBaseLocation;
 
 	private static final int MIN_HARVESTER = 5;
-	private static final int MIN_LIGHT_DEFENDER = 5;
-	private static final int MIN_HEAVY_DEFENDER = 5;
+	private static final int MIN_LIGHT_DEFENDER = 0;
+	private static final int MIN_HEAVY_DEFENDER = 0;
 
 
 	public WarBaseBrainController() {
@@ -214,8 +214,15 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 		}
 	}
 
+	private void setUpTeamName() {
+		if (Utils.teamName == null) {
+			Utils.teamName = getTeamName();
+		}
+	}
+
 	public void reflexes() {
-		// setDebugString("nourriture : " + getNbElementsInBag());
+		setUpTeamName();
+		setDebugString("nourriture : " + getNbElementsInBag());
 		handleMessages();
 		sendMessage();
 	}
