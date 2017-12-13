@@ -37,7 +37,7 @@ public abstract class WarTurretBrainController extends WarTurretBrain {
 		WarAgentPercept enemy = Utils.getNearestEnemyUnit(getPercepts());
 		if (enemy == null) {
 			//PolaCoordinate enemyLocation = Utils.getEnemyFromBase(getMessages());
-			return null;
+			return idle();
 		}
 		double angle = Utils.getShotAngle(enemy, WarShell.SPEED);
 		if (angle != 0) {
