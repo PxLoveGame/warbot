@@ -30,7 +30,7 @@ public abstract class WarEngineerBrainController extends WarEngineerBrain {
 	}
 
 	public String goToBase() {
-		setDebugString("ENGINEER : Go To Base");
+		setDebugString("");
 		List<WarAgentPercept> percepts = getPerceptsAlliesByType(WarAgentType.WarBase);
 
 		if(percepts == null || percepts.size() == 0){

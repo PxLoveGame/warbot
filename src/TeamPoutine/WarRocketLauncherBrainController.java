@@ -24,6 +24,7 @@ public abstract class WarRocketLauncherBrainController extends WarRocketLauncher
 	}
 
 	private void handleMessages(){
+		broadcastMessageToAgentType(WarAgentType.WarBase, "Ready to break some ass");
 		List<WarMessage> messages = getMessages();
 		for(WarMessage message : messages){
 			if(message.getMessage().equals("Target here")) {

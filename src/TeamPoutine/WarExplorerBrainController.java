@@ -52,8 +52,7 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 
 	public void sendMessage() {
 		broadcastMessageToAgentType(WarAgentType.WarBase, "Ready to break some ass");
-		broadcastMessageToAgentType(WarAgentType.WarBase,
-									"explorer group",
+		broadcastMessageToAgentType(WarAgentType.WarBase, "explorer group",
 									group.toString(),
 									String.valueOf(getNbElementsInBag()));
 		sendEnemyBase();
@@ -169,8 +168,10 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 		PolarCoordinates target = Utils.getTargetLocationFromExplorer(getMessages());
 		if (target != null) {
 			setHeading(target.getAngle());
-		} else if (Utils.getNearestEnemyBuilding(getPercepts()) != null) {
+		}
+		if (Utils.getNearestEnemyBuilding(getPercepts()) != null) {
 			ctask = "waitForRocket";
+			return idle();
 		}
 		setRandomHeading(5);
 		return move();
@@ -182,10 +183,6 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 		if (target != null) {
 			int attackers = getNumberOfAttacker();
 			setDebugString("" + attackers);
-			if (attackers < 3) {
-				setHeading(target.getAngle()-180);
-				//ctask = "explore";
-			}
 		} else {
 			ctask = "explore";
 		}
@@ -231,6 +228,7 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 			init_tick = false;
 		}
 		handleChangeGroup();
+		sendEnemyBase();
 		sendEnemyTarget();
 		sendMessage();
 	}
@@ -250,7 +248,7 @@ public abstract class WarExplorerBrainController extends WarExplorerBrain {
 		}
 
 		if (isBlocked()) setRandomHeading();
-		//setDebugString(group.toString() + "|" + ctask);
+		setDebugString(group.toString() + "|" + ctask);
 
 		return action;
 	}

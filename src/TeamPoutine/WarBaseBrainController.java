@@ -23,7 +23,7 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 
 	private String ctask = "nothingToDo";
 	private static final int MAX_LIGHT = 6;
-	private static final int MAX_HEAVY = 6;
+	private static final int MAX_HEAVY = 3;
 	private static final int MAX_EXPLORER = 7;
 	private static final int MAX_ENGINEER = 2;
 	private static final int MAX_ROCKETLAUNCHER = 4;
@@ -31,7 +31,7 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 	private PolarCoordinates foodLocation;
 	private PolarCoordinates enemyBaseLocation;
 
-	private static final int MIN_HARVESTER = 5;
+	private static int MIN_HARVESTER = 5;
 	private static final int MIN_LIGHT_DEFENDER = 0;
 	private static final int MIN_HEAVY_DEFENDER = 0;
 
@@ -71,7 +71,7 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 			}
 		}
 
-		if (defenders.size() < MIN_LIGHT_DEFENDER && fighters.size() > 0) {
+		if (defenders.size() < MIN_LIGHT_DEFENDER) {
 			int neededdefenders = MIN_LIGHT_DEFENDER - defenders.size();
 			int canConvert = fighters.size();
 			for (int i = 0; i < neededdefenders  && i < canConvert; i++) {
@@ -83,7 +83,7 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 				reply(defenders.get(i), "change group");
 			}
 		}
-		setDebugString(fighters.size() + "|" + defenders.size());
+		//setDebugString(fighters.size() + "|" + defenders.size());
 	}
 
 	public void updateFighterHeavy() {
@@ -99,7 +99,7 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 			}
 		}
 
-		if (defenders.size() < MIN_LIGHT_DEFENDER && fighters.size() > 0) {
+		if (defenders.size() < MIN_LIGHT_DEFENDER) {
 			int neededdefenders = MIN_LIGHT_DEFENDER - defenders.size();
 			int canConvert = fighters.size();
 			for (int i = 0; i < neededdefenders  && i < canConvert; i++) {
@@ -111,7 +111,7 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 				reply(defenders.get(i), "change group");
 			}
 		}
-		setDebugString(fighters.size() + "|" + defenders.size());
+		//setDebugString(fighters.size() + "|" + defenders.size());
 	}
 
 	private void updateHarvesterCount() {
@@ -127,19 +127,21 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 			}
 		}
 
-		if (harvesters.size() < MIN_HARVESTER && explorers.size() > 0) {
+		setDebugString(harvesters.size() + "|" + explorers.size());
+
+		if (harvesters.size() < MIN_HARVESTER) {
 			int neededHarvesters = MIN_HARVESTER - harvesters.size();
 			int canConvert = explorers.size();
 			for (int i = 0; i < neededHarvesters  && i < canConvert; i++) {
 				reply(explorers.get(i), "change group");
 			}
-		} else if (harvesters.size() > MIN_HARVESTER && explorers.size() > 2) {
+		} else if (harvesters.size() > MIN_HARVESTER) {
 			int canConvert = harvesters.size() - MIN_HARVESTER - 1;
 			for (int i = 0; i < canConvert; i++) {
 				reply(harvesters.get(i), "change group");
 			}
 		}
-		setDebugString(harvesters.size() + "|" + explorers.size());
+		//setDebugString(harvesters.size() + "|" + explorers.size());
 	}
 
 	public void updateFoodLocation() {
@@ -173,11 +175,16 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 
 	public String createUnits(){
 		int[] nbUnits = calculateUnits();
-		if(nbUnits[1] < MAX_HEAVY) setNextAgentToCreate(WarAgentType.WarHeavy);
-		if(nbUnits[4] < MAX_ROCKETLAUNCHER) setNextAgentToCreate(WarAgentType.WarRocketLauncher);
-		if(nbUnits[0] < MAX_LIGHT) setNextAgentToCreate(WarAgentType.WarLight);
-		if(nbUnits[3] < MAX_ENGINEER) setNextAgentToCreate(WarAgentType.WarEngineer);
 		if(nbUnits[2] < MAX_EXPLORER) setNextAgentToCreate(WarAgentType.WarExplorer);
+		else if(nbUnits[3] < MAX_ENGINEER) setNextAgentToCreate(WarAgentType.WarEngineer);
+		else if(nbUnits[0] < MAX_LIGHT) setNextAgentToCreate(WarAgentType.WarLight);
+		else if(nbUnits[4] < MAX_ROCKETLAUNCHER) setNextAgentToCreate(WarAgentType.WarRocketLauncher);
+		else if(nbUnits[1] < MAX_HEAVY) setNextAgentToCreate(WarAgentType.WarHeavy);
+		else {
+			MIN_HARVESTER = 3;
+			setNextAgentToCreate(WarAgentType.WarExplorer);
+			broadcastMessageToAll("all unit created");
+		}
 		return create();
 	}
 
@@ -231,7 +238,7 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 		}
 
 		return null;
-		
+
 	}
 
 	public String reflexes() {
@@ -245,8 +252,8 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 	@Override
 	public String action() {
 		String action = reflexes();
-		if (action != null) { 
-			return action; 
+		if (action != null) {
+			return action;
 		}
 		decide();
 		Class c = this.getClass();
