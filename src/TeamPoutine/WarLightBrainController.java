@@ -99,15 +99,10 @@ public abstract class WarLightBrainController extends WarLightBrain {
 	}
 
 	public String shoot() {
-		List <WarAgentPercept> percepts = getPercepts();
-		percepts.removeIf(p -> !isEnemy(p));
-
-		if (percepts.isEmpty()) {
+		WarAgentPercept enemy = Utils.getNearestEnemyUnit(getPercepts());
+		if (enemy == null) {
 			return null;
 		}
-
-		Collections.sort(percepts, (w1, w2) -> Double.compare(w1.getDistance(),w2.getDistance()));
-		WarAgentPercept enemy = percepts.get(0);
 		double angle = Utils.getShotAngle(enemy, WarBullet.SPEED);
 		if (angle != 0) {
 			setHeading(angle);

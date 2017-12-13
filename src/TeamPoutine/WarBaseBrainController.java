@@ -159,12 +159,11 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 	}
 
 	public void sendMessage() {
-		for (WarAgentPercept percept : getPerceptsEnemies()) {
-			if (isEnemy(percept) && percept.getType().getCategory().equals(WarAgentCategory.Soldier)) {
-				broadcastMessageToAll("I'm under attack",
-						String.valueOf(percept.getAngle()),
-						String.valueOf(percept.getDistance()));
-			}
+		WarAgentPercept enemy = Utils.getNearestEnemy(getPercepts());
+		if (enemy != null) {
+			broadcastMessageToAll("enemy at base",
+								String.valueOf(enemy.getDistance()),
+								String.valueOf(enemy.getAngle()));
 		}
 		if (foodLocation != null) {
 			broadcastMessageToAll("food location",
@@ -183,14 +182,16 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 		else {
 			MIN_HARVESTER = 3;
 			setNextAgentToCreate(WarAgentType.WarExplorer);
-			broadcastMessageToAll("all unit created");
+			broadcastMessageToAll("all unit created",
+								String.valueOf(enemyBaseLocation.getAngle()),
+								String.valueOf(enemyBaseLocation.getDistance()));
 		}
 		return create();
 	}
 
 	public int[] calculateUnits(){
 		int[] nbUnits = new int[6];
-		List<WarMessage> messages = getMessages();
+		List<WarMessage> messages = new ArrayList<>(getMessages());
 		messages.removeIf((message) -> !message.getMessage().equals("Ready to break some ass"));
 		for (WarMessage message : messages) {
 			if(message.getSenderType() == WarAgentType.WarLight) nbUnits[0]++;
@@ -228,7 +229,8 @@ public abstract class WarBaseBrainController extends WarBaseBrain {
 	}
 
 	private String emergency(){
-		List<WarAgentPercept> percepts = getPerceptsEnemies();
+		List<WarAgentPercept> percepts = new ArrayList<>(getPercepts());
+		percepts.removeIf((e) -> !isEnemy(e));
 		percepts.removeIf((e) -> e.getType() == WarAgentType.WarExplorer || e.getType() == WarAgentType.WarEngineer);
 		if(percepts.size() >= 1){
 			if(getHealth() >= getMaxHealth() * 0.6 && getHealth() < getMaxHealth() * 0.8){

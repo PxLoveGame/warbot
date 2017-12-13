@@ -123,6 +123,20 @@ class Utils {
 		return null;
 	}
 
+	public static double getShotAngleEnemyFromBase(List<WarMessage> ms) {
+		List<WarMessage> messages = new ArrayList<>(ms);
+		for(WarMessage message : messages){
+			if(message.getMessage().equals("enemy at base")) {
+				String[] content = message.getContent();
+				double distance = Double.parseDouble(content[0]);
+				double angle = Double.parseDouble(content[1]);
+				PolarCoordinates targetLocation = getTargetedAgentPosition(message.getAngle(), message.getDistance(), angle, distance);
+				return 0;
+			}
+		}
+		return 0;
+	}
+
 	public static PolarCoordinates getTargetedAgentPosition(double angleToAlly, double distanceFromAlly, double angleFromAllyToTarget, double distanceBetweenAllyAndTarget) {
 		return WarMathTools.addTwoPoints(new PolarCoordinates(distanceFromAlly, angleToAlly),
 				new PolarCoordinates(distanceBetweenAllyAndTarget, angleFromAllyToTarget));
